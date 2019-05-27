@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.28407.52
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IKSIS_GAME_WF", "IKSIS_GAME_WF\IKSIS_GAME_WF.csproj", "{F8C9EA8C-CA5C-4E6B-BBB3-4CFB57910E9E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameControl", "GameControl\GameControl.csproj", "{819E2DD9-07F3-418C-87A3-758C6853E213}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameCore", "GameControl\GameCore.csproj", "{819E2DD9-07F3-418C-87A3-758C6853E213}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameServer", "GameServer\GameServer.csproj", "{4C87AB44-61D6-4353-83E9-CDD7BA568418}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{819E2DD9-07F3-418C-87A3-758C6853E213}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{819E2DD9-07F3-418C-87A3-758C6853E213}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{819E2DD9-07F3-418C-87A3-758C6853E213}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C87AB44-61D6-4353-83E9-CDD7BA568418}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C87AB44-61D6-4353-83E9-CDD7BA568418}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C87AB44-61D6-4353-83E9-CDD7BA568418}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C87AB44-61D6-4353-83E9-CDD7BA568418}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,4 @@
-﻿namespace GameControl
+﻿namespace GameCore
 {
     partial class GameControl
     {
@@ -32,15 +32,8 @@
             // 
             // GameControl
             // 
-            this.AutoScroll = true;
             this.Name = "GameControl";
             this.Size = new System.Drawing.Size(301, 301);
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.GameControl_Paint);
-            this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.GameControl_MouseClick);
-            this.MouseLeave += new System.EventHandler(this.GameControl_MouseLeave);
-            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.GameControl_MouseMove);
-            this.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.GameControl_MouseWheel);
-            this.Resize += new System.EventHandler(this.GameControl_Resize);
             this.ResumeLayout(false);
 
         }

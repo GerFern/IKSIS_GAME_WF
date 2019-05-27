@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{819E2DD9-07F3-418C-87A3-758C6853E213}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>GameControl</RootNamespace>
-    <AssemblyName>GameControl</AssemblyName>
+    <RootNamespace>GameCore</RootNamespace>
+    <AssemblyName>GameCore</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -42,7 +42,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cell.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="Game.cs" />
+    <Compile Include="Player.cs" />
+    <Compile Include="PlayerCell.cs" />
+    <Compile Include="Prefab.cs" />
     <Compile Include="UserControl1.cs">
       <SubType>UserControl</SubType>
     </Compile>
