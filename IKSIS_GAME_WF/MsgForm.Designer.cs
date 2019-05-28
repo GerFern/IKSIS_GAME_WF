@@ -65,6 +65,7 @@
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.IsSplitterFixed = true;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
@@ -95,13 +96,13 @@
             this.tableLayoutPanel2.Size = new System.Drawing.Size(150, 46);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
-            // LoadForm
+            // MsgForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(359, 105);
             this.Controls.Add(this.splitContainer1);
-            this.Name = "LoadForm";
+            this.Name = "MsgForm";
             this.Text = "LoadForm";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();

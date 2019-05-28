@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static IKSIS_GAME_WF.MyForm;
 
 namespace IKSIS_GAME_WF
 {
@@ -28,13 +29,13 @@ namespace IKSIS_GAME_WF
             msgForm.Message = str;
         }
 
-        public void SetBtn(List<MsgForm.MsgFormButton> buttons)
+        public void SetBtn(List<MsgForm.FormButton> buttons)
         {
             msgForm.Buttons = buttons;
         }
 
         EnterServer enterServer = new EnterServer();
-        Lobby lobbyForm = new Lobby();
+        public Lobby lobbyForm = new Lobby();
         MsgForm msgForm = new MsgForm();
         IPEndPoint IPEndPoint;
         MyForm visibleForm;
@@ -44,9 +45,9 @@ namespace IKSIS_GAME_WF
         public MainForm()
         {
             InitializeComponent();
-            msgForm.ButtonClick += new EventHandler<MsgForm.EventArgsBtn>((o, e) =>
+            msgForm.ExitForm += new EventHandler<EventArgsBtn>((o, e) =>
             {
-                foreach (var item in new List<Action<MsgForm.MsgFormButton>>(Program.ButtonActions))
+                foreach (var item in new List<Action<FormButton>>(Program.ButtonActions))
                 {
                     item.Invoke(e.Button);
                 }
@@ -77,18 +78,53 @@ namespace IKSIS_GAME_WF
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            enterServer.Input += new EventHandler((o, eh) =>
+            //GameServer.ClientObject.ArrCMD arr = new GameServer.ClientObject.ArrCMD();
+            //arr.vs = new List<GameServer.ClientObject.JsonObject>();
+            //arr.vs.Add(new GameServer.ClientObject.Ready { isReady = false });
+            //arr.vs.Add(new GameServer.ClientObject.Name { playerName = "qwerty" });
+            //string t = arr.ToJsonSendTCP();
+            //GameServer.ClientObject.ArrCMD arr1 = (GameServer.ClientObject.ArrCMD)GameServer.ClientObject.JsonObject.FromJsonSendTCP(t);
+            msgForm.ButtonClick += new EventHandler<EventArgsBtn>((o, be) =>
             {
+                foreach (var item in Program.ButtonActions.ToList())
+                {
+                    item.Invoke(be.Button);
+                }
+            });
+            msgForm.ExitForm += new EventHandler<EventArgsBtn>((o, be) => Program.ButtonActions.Clear());
+            enterServer.ExitForm += new EventHandler<EventArgsBtn>((o, eh) =>
+            {
+                ///Попытка войти в сервер
                 IPEndPoint = enterServer.IPEndPoint;
                 msgForm.Message = "Ожидание...";
-                msgForm.Buttons = new List<MsgForm.MsgFormButton> { MsgForm.MsgFormButton.Cancel };
-                msgForm.ButtonClick += LoadForm_ConectionCancel;
+                msgForm.Buttons = new List<MsgForm.FormButton> { MsgForm.FormButton.Cancel };
+                Program.ButtonActions.Add((be) =>
+                {
+                    tryConnect.Abort();
+                    SetForm(enterServer, DockStyle.None, AnchorStyles.None);
+                });
                 SetForm(msgForm, DockStyle.None, AnchorStyles.None);
                 //Thread.Sleep(150);
                 tryConnect = new Thread(TryConnect) { Name = "TryConnect" };
                 tryConnect.Start();
                 //SetForm(enterServer, DockStyle.None, AnchorStyles.None);
             });
+            lobbyForm.ExitForm += new EventHandler<EventArgsBtn>((o, eh) =>
+            {
+                if (eh.Button == FormButton.Cont) ;
+                else
+                {
+                    Program.Client?.Disconnect();
+                    Program.Client = null;
+                    SetForm(FormEnum.EnterServer);
+                }
+            });
+            enterServer.UserName = Properties.Settings.Default.UserName;
+            if (IPAddress.TryParse(Properties.Settings.Default.IPAdress, out IPAddress address))
+                enterServer.IPAddress = address;
+            int port = Properties.Settings.Default.Port;
+            if(port>0&&port<short.MaxValue)
+                enterServer.Port = port;
             SetForm(enterServer, DockStyle.None, AnchorStyles.None);
 
             //lobbyForm = new Lobby();
@@ -97,31 +133,48 @@ namespace IKSIS_GAME_WF
 
        
 
+        /// <summary>
+        /// Попытка соединиться с сервером
+        /// </summary>
         private void TryConnect()
         {
             Client Client = new Client();
             if (Client.Connect(IPEndPoint))
             {
+                var set = (Properties.Settings)System.Configuration.SettingsBase.Synchronized(Properties.Settings.Default);
+                set.IPAdress = IPEndPoint.Address.ToString();
+                set.Port = (short)IPEndPoint.Port;
+                set.UserName = enterServer.UserName;
+                set.Save();
                 Program.Client = Client;
-                Client.SendObject(new GameServer.ClientObject.PlayerGUID { guid = Properties.Settings.Default.Guid });
-                Client.SendObject(new GameServer.ClientObject.Name() { playerName = enterServer.PlayerName });
-                this.InvokeFix(() => SetForm(lobbyForm, DockStyle.None, AnchorStyles.None));
+                Client.SendObject(new GameServer.ClientObject.LogIn()
+                {
+                    name = enterServer.UserName,
+                    guid = Properties.Settings.Default.Guid
+                });
+                //Client.SendObject(new GameServer.ClientObject.PlayerGUID { guid = Properties.Settings.Default.Guid });
+                //Client.SendObject(new GameServer.ClientObject.Name() { playerName = enterServer.UserName });
+                this.InvokeFix(() =>
+                {
+                    lobbyForm.playerStateCollectionBindingSource.DataSource = Program.Client.Players;
+                    SetForm(lobbyForm, DockStyle.None, AnchorStyles.None);
+                });
             }
             else
             {
                 this.InvokeFix(() =>
                 {
-                    msgForm.ButtonClick -= LoadForm_ConectionCancel;
+                    //msgForm.ButtonClick -= LoadForm_ConectionCancel;
                     msgForm.Message = "Сервер недоступен!";
-                    msgForm.Buttons = new List<MsgForm.MsgFormButton> { MsgForm.MsgFormButton.Cont };
-                    msgForm.ButtonClick += LoadForm_ErroroContinue;
+                    msgForm.Buttons = new List<MsgForm.FormButton> { MsgForm.FormButton.Cont };
+                    //msgForm.ButtonClick += LoadForm_ErroroContinue;
                 });
             }
         }
         private void LoadForm_ConectionCancel(object sender, MsgForm.EventArgsBtn e)
         {
             tryConnect.Abort();
-            LoadForm_ErroroContinue(sender, e);
+            //LoadForm_ErroroContinue(sender, e);
             //loadForm.ButtonClick -= LoadForm_ConectionCancel;
             //loadForm.ButtonClick -= LoadForm_ErroroContinue;
             //SetForm(enterServer, DockStyle.None, AnchorStyles.None);
@@ -129,8 +182,8 @@ namespace IKSIS_GAME_WF
 
         private void LoadForm_ErroroContinue(object sender, MsgForm.EventArgsBtn e)
         {
-            msgForm.ButtonClick -= LoadForm_ConectionCancel;
-            msgForm.ButtonClick -= LoadForm_ErroroContinue;
+            //msgForm.ButtonClick -= LoadForm_ConectionCancel;
+            //msgForm.ButtonClick -= LoadForm_ErroroContinue;
             SetForm(enterServer, DockStyle.None, AnchorStyles.None);
         }
 
@@ -171,6 +224,7 @@ namespace IKSIS_GAME_WF
             form.Location = formRect.Location;
             //form.Load += new EventHandler((o, e) => form.CanMove = false);
             form.CanMove = false;
+            form.OnEnterForm(EventArgs.Empty);
         }
 
     }

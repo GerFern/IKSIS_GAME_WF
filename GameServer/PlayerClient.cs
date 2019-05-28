@@ -13,7 +13,9 @@ namespace GameServer
     {
         private Socket _handler;
         private Thread _thread;
-        public Guid Guid;
+        public Guid PrivateID;
+        public int PublicID;
+        public string Name;
         public GameCore.Player PlayerCell{ get; private set; }
         public bool IsReady { get; set; }
         public int Index { get; set; }
@@ -94,6 +96,14 @@ namespace GameServer
                 GameCore.Game game = Program.Server.Game;
                 Program.Server.Game.SetPrefab(game.Prefabs[step.prefabID], step.Point, out _);
                 Program.Server.SendAllClients(new PlayerCMD { player = Index, cmd = step });
+            }
+            else if(jsonObject is LogIn logIn)
+            {
+                PrivateID = logIn.guid;
+                Name = logIn.name;
+                int id = Program.GetRandID();
+                SendObject(new ID { id = id });
+                Program.Server.SendAllClients(new NewPlayer { id = id, playerName = Name });
             }
         }
 

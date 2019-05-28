@@ -29,8 +29,29 @@ namespace IKSIS_GAME_WF
 
         private void Button2_Click(object sender, EventArgs e)
         {
-            Program.Client.Disconnect();
-            Program.SetForm(MainForm.FormEnum.EnterServer);
+            OnExitForm(new EventArgsBtn());
+            //Program.Client.Disconnect();
+            //Program.SetForm(MainForm.FormEnum.EnterServer);
+        }
+
+        internal void NewPlayer(PlayerState playerState)
+        {
+            //Program.Client.Players.Add(playerState);
+            //this.InvokeFix(() => playerStateCollectionBindingSource.Add(playerState));
+            //listView1.So
+        }
+
+        protected void OnConneted(EventArgs e)
+        {
+            Connected?.Invoke(this, e);
+            playerStateCollectionBindingSource.DataSource = Program.Client.Players;
+        }
+
+        public event EventHandler Connected;
+
+        private void PlayerStateCollectionBindingSource_CurrentChanged(object sender, EventArgs e)
+        {
+
         }
     }
 

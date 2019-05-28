@@ -19,19 +19,12 @@ namespace IKSIS_GAME_WF
         //    Cancel
         //}
 
-        public enum MsgFormButton
-        {
-            //None,
-            Cont,
-            Cancel,
-        }
+        Button bCont = new Button { Dock = DockStyle.Fill ,Text = "Продолжить", Tag = FormButton.Cont };
+        private Button bCancel = new Button { Dock = DockStyle.Fill, Text = "Отмена", Tag = FormButton.Cancel };
 
-        Button bCont = new Button { Dock = DockStyle.Fill ,Text = "Продолжить", Tag = MsgFormButton.Cont };
-        private Button bCancel = new Button { Dock = DockStyle.Fill, Text = "Отмена", Tag = MsgFormButton.Cancel };
+        List<FormButton> _buttons;
 
-        List<MsgFormButton> _buttons;
-
-        public List<MsgFormButton> Buttons
+        public List<FormButton> Buttons
         {
             get => _buttons;
             set
@@ -49,10 +42,10 @@ namespace IKSIS_GAME_WF
                         {
                             switch (value[i])
                             {
-                                case MsgFormButton.Cont:
+                                case FormButton.Cont:
                                     tableLayoutPanel2.Controls.Add(bCont, i, 0);
                                     break;
-                                case MsgFormButton.Cancel:
+                                case FormButton.Cancel:
                                     tableLayoutPanel2.Controls.Add(bCancel, i, 0);
                                     break;
                                 default:
@@ -85,17 +78,14 @@ namespace IKSIS_GAME_WF
 
         private void Btn_Click(object sender, EventArgs e)
         {
-            if(((Control)sender).Tag is MsgFormButton btn)
+            if(((Control)sender).Tag is FormButton btn)
             {
                 ButtonClick?.Invoke(this, new EventArgsBtn(btn));
+                OnExitForm(new EventArgsBtn(btn));
             }
         }
 
-        public class EventArgsBtn : EventArgs
-        {
-            public MsgFormButton Button { get; }
-            public EventArgsBtn(MsgFormButton button) => Button = button;
-        }
+
 
         public event EventHandler<EventArgsBtn> ButtonClick;
     }

@@ -34,6 +34,17 @@ namespace GameServer
 
 
         public static Server Server { get; set; }
+        public static Random Random = new Random();
+        public static int GetRandID()
+        {
+            int r;
+            do
+            {
+                r = Random.Next();
+            } while (Server.Clients.Any(a => a.PublicID == r));
+            return r;
+        }
+
         static void Main(string[] args)
         {
             IntPtr intPtr = GetSystemMenu(GetConsoleWindow(), false);

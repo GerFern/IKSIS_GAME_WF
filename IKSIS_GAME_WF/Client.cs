@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.ComponentModel;
 
 namespace IKSIS_GAME_WF
 {
@@ -18,7 +19,28 @@ namespace IKSIS_GAME_WF
     {
         private Socket _serverSocket;
         private Thread _clientThread;
+        public int PublicID = -1;
+
+        public class PlayerStateCollection : BindingList<PlayerState>
+        {
+            Client Parent { get; }
+            public new void Add(PlayerState playerState)
+            {
+                Program.InvokeFix(() =>
+                {
+                    base.Add(playerState);
+                    Parent.NewPlayer?.Invoke(this, new EventArgsPlayer(playerState));
+                });
+            }
+            public PlayerStateCollection(Client parent) => Parent = parent;
+        }
         public Game Game { get; set; }
+        public PlayerStateCollection Players { get; } 
+
+        public Client()
+        {
+            Players = new PlayerStateCollection(this);
+        }
 
         public bool Connect(IPEndPoint iPEndPoint)
         {
@@ -97,13 +119,13 @@ namespace IKSIS_GAME_WF
                         {
                             Program.InvokeFix(() =>
                             {
-                                Program.ButtonActions.Add(new Action<MsgForm.MsgFormButton>((a) =>
+                                Program.ButtonActions.Add(new Action<MsgForm.FormButton>((a) =>
                                 {
                                     Program.SetForm(MainForm.FormEnum.EnterServer);
                                     Program.ButtonActions.Clear();
                                 }));
                                 Program.SetMsg("Потеряно соединение");
-                                Program.SetBtn(new List<MsgForm.MsgFormButton> { MsgForm.MsgFormButton.Cont });
+                                Program.SetBtn(new List<MsgForm.FormButton> { MsgForm.FormButton.Cont });
                                 Program.SetForm(MainForm.FormEnum.MsgForm);
                                 _serverSocket.Disconnect(false);
                             });
@@ -116,11 +138,27 @@ namespace IKSIS_GAME_WF
 
         private void HandleObject(JsonObject jsonObject)
         {
-
+            if(jsonObject is ID id)
+            {
+                if (PublicID == -1) PublicID = id.id;
+            }
+            else if(jsonObject is NewPlayer newPlayer)
+            {
+                PlayerState playerState = new PlayerState();
+                playerState.publicID = newPlayer.id;
+                playerState.name = newPlayer.playerName;
+                Players.Add(playerState);
+            }
         }
 
         private void HandleData(string data)
         {
+            //if (!(logServer == null || logServer.IsDisposed))
+            //{
+            //    logServer.Visible = true;
+            //    logServer.WriteLine(data);
+            //}
+            Program.WriteLog(data);
             HandleObject(FromJsonSendTCP(data));
             //var vs = data.Split(new char[] { '#' }, 3);
             //string command = vs[1].ToUpper();
@@ -144,5 +182,14 @@ namespace IKSIS_GAME_WF
             //    Game.SetPrefab(prefab, turn.Point, out _, turn.player, false);
             //}
         }
+
+
+        public class EventArgsPlayer : EventArgs
+        {
+            public PlayerState PlayerState { get; }
+            public EventArgsPlayer(PlayerState playerState) => PlayerState = playerState;
+        }
+
+        public event EventHandler<EventArgsPlayer> NewPlayer;
     }
 }

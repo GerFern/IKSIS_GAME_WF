@@ -14,7 +14,7 @@ namespace GameServer
         Socket server { get; }
         public GameCore.Game Game { get; set; }
 
-        ClientList Clients { get; } = new ClientList();
+        public ClientList Clients { get; } = new ClientList();
 
         public Server(IPEndPoint iP)
         {
@@ -71,7 +71,7 @@ namespace GameServer
             try
             {
                 PlayerClient newClient = new PlayerClient(handle);
-                SendAllClients(new NewPlayer() { message = "присоединился к игре" });
+                //SendAllClients(new NewPlayer() { message = "присоединился к игре" });
                 Clients.Add(newClient);
                 Console.WriteLine("New client connected: {0}", handle.RemoteEndPoint);
             }

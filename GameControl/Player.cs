@@ -25,8 +25,9 @@ namespace GameCore
         public abstract void DrawBorder(Graphics graphics, Rectangle rectangleBase, Rectangle rectangleUp);
         public abstract void FillSelectedRectangle(Graphics graphics, Rectangle rectangleBase, Rectangle rectangleUp);
 
-
-        public Image GetImage(Size size, int heigth)
+        [System.ComponentModel.Bindable(true)]
+        public Bitmap SimpleImage => GetImage(new Size(10, 10), 0);
+        public Bitmap GetImage(Size size, int heigth)
         {
             Bitmap bitmap = new Bitmap(size.Width, size.Height);
             Graphics graphics = Graphics.FromImage(bitmap);

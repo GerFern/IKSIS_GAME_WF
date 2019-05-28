@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -46,21 +47,39 @@ namespace GameServer.ClientObject
         public JsonObject cmd;
     }
 
+    public class ArrCMD : JsonObject
+    {
+        [Newtonsoft.Json.JsonProperty("")]
+        [Newtonsoft.Json.JsonConverter(typeof(TCPCommandConverter))]
+        public List<JsonObject> vs;
+    }
+
+    public class LogIn : JsonObject
+    {
+        public string name;
+        public Guid guid;
+    }
+
     public class PlayerGUID : JsonObject
     {
+        [Newtonsoft.Json.JsonProperty("")]
         public Guid guid;
+    }
+
+    public class ID : JsonObject
+    {
+        [Newtonsoft.Json.JsonProperty("")]
+        public int id;
     }
 
     public class CellColor : JsonObject
     {
-        public int? player;
         public Color color1;
         public Color color2;
     }
    
     public class Step : JsonObject
     {
-        public int player;
         public int prefabID;
         public Point Point;
         public GameCore.Prefab.Rotate Rotate;
@@ -80,26 +99,22 @@ namespace GameServer.ClientObject
 
     public class Name : JsonObject
     {
+        [JsonProperty("")]
         public string playerName;
     }
 
-    public class NewPlayer : Message
+    public class NewPlayer : JsonObject
     {
-        [JsonIgnore]
-        public static Type TypeDef => typeof(NewPlayer);
-
+        public int id;
+        public string playerName;
     }
 
     public class LostPlayer : Message
     {
-        [JsonIgnore]
-        public static Type TypeDef => typeof(LostPlayer);
     }
 
     public class Message : JsonObject
     {
-        [JsonIgnore]
-        public static Type TypeDef => typeof(Message);
         public string message;
     }
 
@@ -157,7 +172,7 @@ namespace GameServer.ClientObject
     {
         public override bool CanConvert(Type objectType)
         {
-            return objectType == JsonObject.TypeDefBase || objectType.IsSubclassOf(JsonObject.TypeDefBase);
+            return objectType == JsonObject.TypeDefBase || objectType.IsSubclassOf(JsonObject.TypeDefBase) || objectType.GetInterfaces().Contains(typeof(IList));
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
@@ -171,6 +186,17 @@ namespace GameServer.ClientObject
                 }
                 return reader.Value;
             }
+            else if( objectType.GetInterfaces().Contains(typeof(IList)))
+            {
+                JArray jArray = JArray.Load(reader);
+                var strList = jArray.ToList();
+                List<JsonObject> retList = new List<JsonObject>();
+                foreach (var item in strList)
+                {
+                    retList.Add(JsonObject.FromJsonSendTCP(item.ToString()));
+                }
+                return retList;
+            }
             else return JsonConvert.DeserializeObject(reader.ReadAsString(), objectType);
         }
 
@@ -179,6 +205,16 @@ namespace GameServer.ClientObject
             if (value is JsonObject jsonObject)
             {
                 writer.WriteValue(jsonObject.ToJsonSendTCP());
+            }
+            else if(value is IEnumerable<JsonObject> vs)
+            {
+                JArray jArray = new JArray();
+                foreach (var item in vs)
+                {
+                    jArray.Add(item.ToJsonSendTCP());
+                }
+                jArray.WriteTo(writer);
+                //writer.WriteValue(jArray);
             }
             else writer.WriteValue(value);
             //JToken t = JToken.FromObject(value);
@@ -204,4 +240,5 @@ namespace GameServer.ClientObject
             //}
         }
     }
+
 }

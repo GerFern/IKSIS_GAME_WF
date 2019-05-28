@@ -13,8 +13,40 @@ namespace IKSIS_GAME_WF
 {
     public partial class EnterServer : MyForm
     {
-        public string PlayerName => textBox1.Text;
-        public IPEndPoint IPEndPoint { get; private set; }
+        public string UserName
+        {
+            get => textBox1.Text;
+            set => textBox1.Text = value;
+        }
+        IPAddress _iPAddress;
+        int _port;
+        public IPAddress IPAddress
+        {
+            get => _iPAddress;
+            set
+            {
+                _iPAddress = value;
+                textBox2.Text = value.ToString();
+            }
+        }
+        public int Port
+        {
+            get => _port;
+            set
+            {
+                _port = value;
+                textBox3.Text = value.ToString();
+            }
+        }
+        public IPEndPoint IPEndPoint
+        {
+            get => new IPEndPoint(_iPAddress, _port);
+            set
+            {
+                IPAddress = value.Address;
+                Port = value.Port;
+            }
+        }
         public event EventHandler Input;
         public EnterServer()
         {
@@ -38,8 +70,10 @@ namespace IKSIS_GAME_WF
                 MessageBox.Show("Неверный порт");
                 return;
             }
-            IPEndPoint = new IPEndPoint(address, port);
-            Input?.Invoke(this, EventArgs.Empty);
+            _iPAddress = address;
+            _port = port;
+            OnExitForm(new EventArgsBtn());
+            //ExitForm?.Invoke(this, new EventArgsBtn());
         }
     }
 }
