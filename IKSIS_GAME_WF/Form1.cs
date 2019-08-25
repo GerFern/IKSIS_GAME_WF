@@ -36,8 +36,8 @@ namespace IKSIS_GAME_WF
 
             
         }
-        PlayerClient PlayerClient { get; } = new PlayerClient();
-        Socket Socket => PlayerClient.Socket;
+        //PlayerClient PlayerClient { get; } = new PlayerClient();
+        //Socket Socket => PlayerClient.Socket;
         private void Button1_Click(object sender, EventArgs e)
         {
             IPEndPoint iPEndPoint = new IPEndPoint(IPAddress.Parse(textBox1.Text), int.Parse(textBox2.Text));
@@ -95,76 +95,76 @@ namespace IKSIS_GAME_WF
         }
     }
 
-    public class PlayerClient
-    {
-        GameControl control;
-        public Socket Socket { get; } = new Socket(SocketType.Stream, ProtocolType.Tcp);
-        MemoryStream ms;
-        BinaryWriter bw;
-        BinaryReader br;
-        public PlayerClient()
-        {
-            ms = new MemoryStream(new byte[256], 0, 256, true, true);
-            bw = new BinaryWriter(ms);
-        }
+    //public class PlayerClient
+    //{
+    //    GameControl control;
+    //    public Socket Socket { get; } = new Socket(SocketType.Stream, ProtocolType.Tcp);
+    //    MemoryStream ms;
+    //    BinaryWriter bw;
+    //    BinaryReader br;
+    //    public PlayerClient()
+    //    {
+    //        ms = new MemoryStream(new byte[256], 0, 256, true, true);
+    //        bw = new BinaryWriter(ms);
+    //    }
 
-        public void Send_MakeStep(Prefab prefab)
-        {
-            byte[][] vs = new byte[prefab.Points.Length][];
-            for (int i = 0; i < vs.Length; i++)
-            {
-                byte[] t = vs[i] = new byte[2];
-                Point p = prefab.Points[i].Point;
-                t[0] = (byte)p.X;
-                t[1] = (byte)p.Y;
-            }
-            SendPacket(GameCode.MakeStep, vs);
-        }
-        void SendPacket()
-        {
-            Socket.Send(ms.GetBuffer());
-        }
-        public void SendPacket(GameCode code, Prefab prefab)
-        {
-            bw.WriteObject(code, prefab);
-            Socket.Send(ms.GetBuffer());
-        }
+    //    public void Send_MakeStep(Prefab prefab)
+    //    {
+    //        byte[][] vs = new byte[prefab.Points.Length][];
+    //        for (int i = 0; i < vs.Length; i++)
+    //        {
+    //            byte[] t = vs[i] = new byte[2];
+    //            Point p = prefab.Points[i].Point;
+    //            t[0] = (byte)p.X;
+    //            t[1] = (byte)p.Y;
+    //        }
+    //        SendPacket(GameCode.MakeStep, vs);
+    //    }
+    //    void SendPacket()
+    //    {
+    //        Socket.Send(ms.GetBuffer());
+    //    }
+    //    public void SendPacket(GameCode code, Prefab prefab)
+    //    {
+    //        bw.WriteObject(code, prefab);
+    //        Socket.Send(ms.GetBuffer());
+    //    }
 
-        public void SendPacket(GameCode code, Color color)
-        {
-            bw.WriteObject(code, color);
-            Socket.Send(ms.GetBuffer());
-        }
+    //    public void SendPacket(GameCode code, Color color)
+    //    {
+    //        bw.WriteObject(code, color);
+    //        Socket.Send(ms.GetBuffer());
+    //    }
 
-        public void SendPacket(GameCode code, params byte[][] data)
-        {
-            bw.Write((byte)code);
-            bw.Write((short)data.Sum(a=>a.Length));
-            foreach (var item in data)
-            {
-                bw.Write(item);
-            }
-            Socket.Send(ms.GetBuffer());
-        }
+    //    public void SendPacket(GameCode code, params byte[][] data)
+    //    {
+    //        bw.Write((byte)code);
+    //        bw.Write((short)data.Sum(a=>a.Length));
+    //        foreach (var item in data)
+    //        {
+    //            bw.Write(item);
+    //        }
+    //        Socket.Send(ms.GetBuffer());
+    //    }
 
-        public object ReceivePacket()
-        {
-            Socket.Receive(ms.GetBuffer());
-            GameCode code = (GameCode)br.ReadByte();
-            short length = br.ReadInt16();
-            byte[] data = br.ReadBytes(length);
-            //|1-code|2-length|length-data|
-            object ret = null;
+    //    public object ReceivePacket()
+    //    {
+    //        Socket.Receive(ms.GetBuffer());
+    //        GameCode code = (GameCode)br.ReadByte();
+    //        short length = br.ReadInt16();
+    //        byte[] data = br.ReadBytes(length);
+    //        //|1-code|2-length|length-data|
+    //        object ret = null;
             
-            switch (code)
-            {
-                case GameCode.ID:
-                    break;
-                default:
-                    break;
-            }
-            return ret;
-        }
-    }
+    //        switch (code)
+    //        {
+    //            case GameCode.ID:
+    //                break;
+    //            default:
+    //                break;
+    //        }
+    //        return ret;
+    //    }
+    //}
 
 }

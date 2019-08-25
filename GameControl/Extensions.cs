@@ -29,20 +29,13 @@ namespace GameCore
 
         public static Rectangle Move(this Rectangle rectangle, int x, int y) => new Rectangle(rectangle.Location.DownRight(x, y), rectangle.Size);
 
-        public static Region GetRegion(this Rectangle rectangleDown, Rectangle rectangleUp)
+
+        public static Prefab.Rotate AddRotate(this Prefab.Rotate rotate, Prefab.Rotate add)
         {
-            var gp = new System.Drawing.Drawing2D.GraphicsPath();
-            gp.AddLines(new Point[]
-            {
-                rectangleDown.DownLeft(),
-                rectangleDown.DownRight(),
-                rectangleDown.UpRight(),
-                rectangleUp.UpRight(),
-                rectangleUp.UpLeft(),
-                rectangleUp.DownLeft(),
-                rectangleDown.DownLeft()
-            });
-            return new Region(gp);
+            byte b1 = (byte)rotate;
+            byte b2 = (byte)add;
+            byte b3 = (byte)((b1 + b2) % 4);
+            return (Prefab.Rotate)b3 | ((rotate ^ add) & (Prefab.Rotate.horizontal | Prefab.Rotate.vertical));
         }
     }
 }

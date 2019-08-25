@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "gtk_test": {
+      "commandName": "Project"
+    },
+    "newProfile1": {
+      "commandName": "Project"
+    }
+  }
+}

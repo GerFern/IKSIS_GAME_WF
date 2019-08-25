@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using GameServer.ClientObject.Interface;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -36,16 +37,17 @@ namespace GameServer.ClientObject
 
         public string ToJsonSendTCP() => $"#{GetType().Name}#{ToJson()}";
 
-
+        public virtual void Send() => SendEvent?.Invoke(this);
+        public static event Action<JsonObject> SendEvent;
     }
 
     //[Newtonsoft.Json.JsonObject()]
-    public class PlayerCMD : JsonObject
-    {
-        public int player;
-        [Newtonsoft.Json.JsonConverter(typeof(TCPCommandConverter))]
-        public JsonObject cmd;
-    }
+    //public class PlayerCMD : JsonObject
+    //{
+    //    public int player;
+    //    [Newtonsoft.Json.JsonConverter(typeof(TCPCommandConverter))]
+    //    public JsonObject cmd;
+    //}
 
     public class ArrCMD : JsonObject
     {
@@ -68,8 +70,9 @@ namespace GameServer.ClientObject
 
     public class ID : JsonObject
     {
-        [Newtonsoft.Json.JsonProperty("")]
+        //[Newtonsoft.Json.JsonProperty("")]
         public int id;
+        public bool gameStarted;
     }
 
     public class CellColor : JsonObject
@@ -78,12 +81,14 @@ namespace GameServer.ClientObject
         public Color color2;
     }
    
-    public class Step : JsonObject
+    public class Step : JsonObject, IPlayer
     {
         public int prefabID;
         public Point Point;
         public GameCore.Prefab.Rotate Rotate;
         public GameCore.Prefab.Rotate Flip;
+
+        public int PublicID { get; set; }
     }
 
     //public class TurnAccept : TurnSend
@@ -103,10 +108,29 @@ namespace GameServer.ClientObject
         public string playerName;
     }
 
-    public class NewPlayer : JsonObject
+    public class NewPlayer : JsonObject, IPlayer
     {
-        public int id;
+        //public int id;
         public string playerName;
+
+        public int PublicID { get; set; }
+    }
+
+    public class PlayerState : JsonObject, IPlayer
+    {
+        public virtual int PublicID { get; set; }
+        public virtual string Name { get; set; }
+        public virtual Color Color { get; set; }
+        public virtual int Index { get; set; }
+        public virtual bool Ready { get; set; }
+    }
+
+    public class PlayerList : JsonObject
+    {
+        internal Dictionary<int, (string Name, Color Color, int Index, bool Ready)> players;
+
+        public PlayerState[] Vs { get; set; }
+        //public Dictionary<int, (string Name, Color Color, int Index, bool Ready)> players;
     }
 
     public class LostPlayer : Message
@@ -129,8 +153,20 @@ namespace GameServer.ClientObject
 
     }
 
+    public class GameStart : JsonObject
+    {
+        public Size size;
+        public (int Count, Point[] Points)[] Prefabs;
+        /// <summary>
+        /// key - publicID
+        /// </summary>
+        public Dictionary<int, (int index, Color color)> Players;
+    }
 
+    public class GetPlayerList : JsonObject
+    {
 
+    }
     //public class PlayerCMDConverter : JsonConverter
     //{
     //    public override bool CanConvert(Type objectType)
@@ -241,4 +277,32 @@ namespace GameServer.ClientObject
         }
     }
 
+}
+
+
+namespace GameServer.ClientObject.Attributes
+{
+    [AttributeUsage(AttributeTargets.Class, Inherited = true , AllowMultiple = false)]
+    public class PlayerCMDatrAttribute : Attribute
+    { }
+
+    [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
+    public class PlayerProperyAttribute : Attribute
+    {
+
+    }
+}
+
+namespace GameServer.ClientObject.Interface
+{
+    public interface IPlayer
+    {
+        public int PublicID { get; set; }
+    }
+
+
+    public interface IPlayerProperty
+    {
+
+    }
 }

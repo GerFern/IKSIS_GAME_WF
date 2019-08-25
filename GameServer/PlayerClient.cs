@@ -16,9 +16,11 @@ namespace GameServer
         public Guid PrivateID;
         public int PublicID;
         public string Name;
-        public GameCore.Player PlayerCell{ get; private set; }
+        public GameCore.PlayerCellBase PlayerCell{ get; private set; }
         public bool IsReady { get; set; }
         public int Index { get; set; }
+        public Color Color { get; private set; }
+
         public PlayerClient(Socket socket)
         {
             
@@ -65,7 +67,12 @@ namespace GameServer
         /// <param name="data"></param>
         private void HandleCommand(string data)
         {
-            HandleJsonObject(FromJsonSendTCP(data));
+            string[] vs = data.Split('^');
+            foreach (var item in vs)
+            {
+                if (item != "")
+                    HandleJsonObject(FromJsonSendTCP(item));
+            }
             //var vs = data.Split(new char[] { '#' }, 3);
             //string command = vs[1].ToUpper();
             //string body = vs[2];
@@ -94,16 +101,35 @@ namespace GameServer
             else if(jsonObject is Step step)
             {
                 GameCore.Game game = Program.Server.Game;
-                Program.Server.Game.SetPrefab(game.Prefabs[step.prefabID], step.Point, out _);
+                Program.Server.Game.SetPrefab(step.prefabID, step.Rotate, step.Point, out _);
                 Program.Server.SendAllClients(new PlayerCMD { player = Index, cmd = step });
             }
             else if(jsonObject is LogIn logIn)
             {
                 PrivateID = logIn.guid;
                 Name = logIn.name;
-                int id = Program.GetRandID();
-                SendObject(new ID { id = id });
-                Program.Server.SendAllClients(new NewPlayer { id = id, playerName = Name });
+                PublicID = Program.GetRandID();
+                SendObject(new ID { id = PublicID });
+                Program.Server.SendAllClients(new NewPlayer { PublicID = PublicID, playerName = Name });
+                var list = new PlayerList();
+                //TODO
+                list.players = new System.Collections.Generic.Dictionary<int, (string Name, Color Color, int Index, bool Ready)>();
+                foreach (var item in Program.Server.Clients)
+                {
+                    list.players.Add(item.PublicID, (item.Name, item.Color, item.Index, item.IsReady));
+                }
+                //list.players.Add(Program.Server.Clients[0])
+                SendObject(list);
+            }
+            else if(jsonObject is GetPlayerList getPlayerList)
+            {
+                var list = new PlayerList();
+                list.players = new System.Collections.Generic.Dictionary<int, (string Name, Color Color, int Index, bool Ready)>();
+                foreach (var item in Program.Server.Clients)
+                {
+                    list.players.Add(item.PublicID, (item.Name, item.Color, item.Index, item.IsReady));
+                }
+                SendObject(list);
             }
         }
 
@@ -115,14 +141,15 @@ namespace GameServer
         public void SendObject(JsonObject jsonObject)
         {
             Send(jsonObject.ToJsonSendTCP());
+            Thread.Sleep(10);
         }
 
         public void Send(string command)
         {
             try
             {
-                int bytesSent = _handler.Send(Encoding.UTF8.GetBytes(command));
-                if (bytesSent > 0) Console.WriteLine("Success");
+                int bytesSent = _handler.Send(Encoding.UTF8.GetBytes(command+'^'));
+                if (bytesSent > 0) Console.WriteLine($"Success_{bytesSent}");
             }
             catch (Exception exp) { Console.WriteLine("Error with send command: {0}.", exp.Message); Program.Server.EndClient(this); }
         }

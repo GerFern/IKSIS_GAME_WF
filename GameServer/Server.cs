@@ -6,6 +6,7 @@ using System.Threading;
 
 namespace GameServer
 {
+
     public class Server
     {
         private Thread _serverThread;
@@ -26,7 +27,6 @@ namespace GameServer
             _serverThread = new Thread(Start) { Name = "ServerThread" };
             _serverThread.Start();
             //object socket = null;
-
             //server.BeginAccept(new AsyncCallback(AcceptCallback), socket);
         }
 

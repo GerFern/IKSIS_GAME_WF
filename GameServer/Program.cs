@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
-using GameCore;
 
 namespace GameServer
 {
@@ -118,7 +116,12 @@ namespace GameServer
 
         private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            for (int i = 0; i < 20; i++)
+            {
+                System.Console.WriteLine("AAAAAAAA");
+                Thread.Sleep(35);
+            }
+            //throw new NotImplementedException();
         }
 
         private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)

@@ -13,7 +13,7 @@ namespace IKSIS_GAME_WF
     {
         //[System.ComponentModel.TypeConverter(typeof(Bitmap))]
         [System.ComponentModel.Browsable(false)]
-        public Player playerCell { get; set; }
+        public PlayerCellBase playerCell { get; set; }
         [DisplayName("Цвет")]
         [System.ComponentModel.Browsable(true)]
         public Bitmap Image => playerCell == null ? new Bitmap(10,10) : playerCell.SimpleImage;

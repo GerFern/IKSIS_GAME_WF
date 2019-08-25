@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <ApplicationIcon />
+    <StartupObject />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="**\*.glade" />
+    <EmbeddedResource Include="**\*.glade">
+      <LogicalName>%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <None Remove="**\*.css" />
+    <EmbeddedResource Include="**\*.css">
+      <LogicalName>%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+    
+  <ItemGroup>
+    <PackageReference Include="GtkSharp" Version="3.22.24.37" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GameControl\GameCore.csproj" />
+    <ProjectReference Include="..\GameServer\GameServer.csproj">
+      <Private>true</Private>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\Home\source\repos\NodeTest\NodeTest\NodeTest.csproj" />
+  </ItemGroup>
+</Project>

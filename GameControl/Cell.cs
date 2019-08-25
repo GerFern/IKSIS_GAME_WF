@@ -21,6 +21,9 @@ namespace GameCore
             }
         }
 
+     
+        public Player Player => Game.Players[owner];
+
         public Border Border
         {
             get => border;
@@ -29,9 +32,6 @@ namespace GameCore
                 border = value;
             }
         }
-        public Player Player => Game.Players[owner];
-
-       
 
         internal Cell(Game game, Point point)
         {

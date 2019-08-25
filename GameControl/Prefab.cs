@@ -208,7 +208,9 @@ namespace GameCore
             //}
 
         }
-        public enum Rotate
+
+        [Flags]
+        public enum Rotate : byte
         {
             r0 = 0x0,
             r90 = 0x1,
@@ -224,6 +226,13 @@ namespace GameCore
             Point source;
             int Width = size.Width - 1;
             int Height = size.Height - 1;
+            const Rotate hor_ver = Rotate.horizontal | Rotate.vertical;
+            if (rotate.HasFlag(hor_ver))
+            {
+                rotate ^= hor_ver;
+                if (rotate.HasFlag(Rotate.r180)) rotate ^= Rotate.r180;
+                else rotate |= Rotate.r180;
+            }
             switch (rotate)
             {
                 case Rotate.r90:
@@ -237,7 +246,7 @@ namespace GameCore
                     for (int i = 0; i < points.Length; i++)
                     {
                         source = this.Points[i].Point;
-                        points[i] = new Point(Width - source.X - 1, source.X);
+                        points[i] = new Point(Width - source.X, Height - source.Y);
                     }
                     break;
                 case Rotate.r270:
@@ -261,8 +270,50 @@ namespace GameCore
                         points[i] = new Point(Width - source.X, source.Y);
                     }
                     break;
+                case Rotate.r90 | Rotate.vertical:
+                    for (int i = 0; i < points.Length; i++)
+                    {
+                        source = this.Points[i].Point;
+                        points[i] = new Point(source.Y, source.X);
+                    }
+                    break;
+                case Rotate.r180 | Rotate.vertical:
+                    for (int i = 0; i < points.Length; i++)
+                    {
+                        source = this.Points[i].Point;
+                        points[i] = new Point(Width - source.X, source.Y);
+                    }
+                    break;
+                case Rotate.r270 | Rotate.vertical:
+                    for (int i = 0; i < points.Length; i++)
+                    {
+                        source = this.Points[i].Point;
+                        points[i] = new Point(Height - source.Y, Width - source.X);
+                    }
+                    break;
+                case Rotate.r90 | Rotate.horizontal:
+                    for (int i = 0; i < points.Length; i++)
+                    {
+                        source = this.Points[i].Point;
+                        points[i] = new Point(Height - source.Y, Width - source.X);
+                    }
+                    break;
+                case Rotate.r180 | Rotate.horizontal:
+                    for (int i = 0; i < points.Length; i++)
+                    {
+                        source = this.Points[i].Point;
+                        points[i] = new Point(source.X, Height - source.Y);
+                    }
+                    break;
+                case Rotate.r270 | Rotate.horizontal:
+                    for (int i = 0; i < points.Length; i++)
+                    {
+                        source = this.Points[i].Point;
+                        points[i] = new Point(source.Y, source.X);
+                    }
+                    break;
                 default:
-                    this.Points.CopyTo(points, 0);
+                    points = this.Points.Select(a => a.Point).ToArray();//.CopyTo(points, 0);
                     break;
             }
             return new Prefab(points);
