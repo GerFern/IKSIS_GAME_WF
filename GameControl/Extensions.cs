@@ -9,6 +9,28 @@ namespace GameCore
 {
     public static class Extensions
     {
+        static readonly Random random = new Random();
+        /// <summary>
+        /// Тасование Фишера — Йетса
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        public static T[] Shuffle<T>(this ICollection<T> list)
+        {
+            T[] ts = list.ToArray();
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = random.Next(n + 1);
+                T value = ts[k];
+                ts[k] = ts[n];
+                ts[n] = value;
+            }
+            return ts;
+        }
+
         public static Point Up(this Point point) => new Point(point.X, point.Y - 1);
         public static Point UpLeft(this Point point) => new Point(point.X - 1, point.Y - 1);
         public static Point UpRight(this Point point) => new Point(point.X + 1, point.Y - 1);

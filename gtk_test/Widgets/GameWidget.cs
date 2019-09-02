@@ -14,7 +14,7 @@ namespace gtk_test.Widgets
         [UI]
         private Scale _scale = null;
 
-        private GameWidgetOver gameWidgetOver;
+        public GameWidgetOver GameWidgetOver { get; private set; }
         private int _counter;
 
         private GameCore.Game game;
@@ -24,7 +24,7 @@ namespace gtk_test.Widgets
             set
             {
                 game = value;
-                gameWidgetOver.Game = value;
+                GameWidgetOver.Game = value;
                 PrefabSelectorWidget[] widgets = new PrefabSelectorWidget[value.Prefabs.Count];
                 var en = value.Prefabs.GetEnumerator();
                 Cairo.Color back = new Cairo.Color(0.5, 0.5, 0.7, 1);
@@ -41,7 +41,7 @@ namespace gtk_test.Widgets
                     w.PrefabID = en.Current.Key;
                     w.BackgroundColor = back;
                     w.ForeColor = fore;
-                    w.GameWidget = gameWidgetOver;
+                    w.GameWidget = GameWidgetOver;
                 }
                 foreach (var item in widgets)
                 {
@@ -63,8 +63,8 @@ namespace gtk_test.Widgets
             KeyReleaseEvent += GameWindow_KeyReleaseEvent;
             //_button1.Clicked += Button1_Clicked;
             builder.Dispose();
-            gameWidgetOver = new GameWidgetOver(_gameWidget);
-            gameWidgetOver.ScaleChanged += GameWidget_ScaleChanged;
+            GameWidgetOver = new GameWidgetOver(_gameWidget);
+            GameWidgetOver.ScaleChanged += GameWidget_ScaleChanged;
             _scale.ChangeValue += _scale_ChangeValue;
             CssProvider cssProvider = new CssProvider();
             cssProvider.LoadFromResource("Css/test.css");
@@ -73,12 +73,12 @@ namespace gtk_test.Widgets
 
         private void _scale_ChangeValue(object o, ChangeValueArgs args)
         {
-            gameWidgetOver.Scale = _scale.Value;
+            GameWidgetOver.Scale = _scale.Value;
         }
 
         private void GameWidget_ScaleChanged(object sender, EventArgs e)
         {
-            _scale.Value = gameWidgetOver.Scale;
+            _scale.Value = GameWidgetOver.Scale;
         }
 
         private void GameWindow_KeyReleaseEvent(object o, KeyReleaseEventArgs args)
@@ -86,7 +86,7 @@ namespace gtk_test.Widgets
             var evnt = args.Event;
             if (evnt.Key == Gdk.Key.Control_L)
             {
-                gameWidgetOver.Control = false;
+                GameWidgetOver.Control = false;
             }
         }
 
@@ -95,7 +95,7 @@ namespace gtk_test.Widgets
             var evnt = args.Event;
             if (evnt.Key == Gdk.Key.Control_L)
             {
-                gameWidgetOver.Control = true;
+                GameWidgetOver.Control = true;
             }
         }
 

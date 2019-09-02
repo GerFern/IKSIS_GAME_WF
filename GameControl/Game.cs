@@ -45,6 +45,10 @@ namespace GameCore
         public Cell[,] Cells { get; private set; }
         public PrefabCollection Prefabs { get; } = new PrefabCollection();
         public PlayerDicrionary Players { get; } = new PlayerDicrionary();
+
+        public bool MultiplayerGame { get; private set; }
+        public int PlayerIndex { get; private set; }
+
         /// <summary>
         /// Текущий игрок с правом хода
         /// </summary>
@@ -63,6 +67,7 @@ namespace GameCore
         public int Rows { get; private set; }
         public int Columns { get; private set; }
         public bool IsStarted { get; private set; }
+        public bool AllowSetPrefab => !MultiplayerGame || PlayerIndex == CurrentPlayer;
         #endregion // public properties
         #region public methods
         /// <summary>
@@ -83,8 +88,36 @@ namespace GameCore
             Rows = rows;
             Columns = columns;
             PlayersCount = Players.Count;
-            Players.InitPrefabs(((Dictionary<int,(int,Prefab)>)Prefabs).ToDictionary(a => a.Key, a => a.Value.Item1));
+            //Players.InitPrefabs(((Dictionary<int,(int,Prefab)>)Prefabs).ToDictionary(a => a.Key, a => a.Value.Item1));
+            Players.InitPrefabs(Prefabs.ToDictionary(a => a.Key, b => b.Value.Count));
             IsStarted = true;
+            MultiplayerGame = false;
+            PlayerIndex = -1;
+            CurrentPlayer = 1;
+            Started?.Invoke(this, EventArgs.Empty);
+        }
+
+
+        public void StartMultiplayer(Size gameSize, int playerIndex)
+        {
+            int columns = gameSize.Width, rows = gameSize.Height;
+            Cells = new Cell[columns, rows];
+            for (int i = 0; i < columns; i++)
+            {
+                for (int j = 0; j < rows; j++)
+                {
+                    Cells[i, j] = new Cell(this, new Point(i, j));
+                }
+            }
+            Rows = rows;
+            Columns = columns;
+            PlayersCount = Players.Count;
+            //Players.InitPrefabs(((Dictionary<int,(int,Prefab)>)Prefabs).ToDictionary(a => a.Key, a => a.Value.Item1));
+            Players.InitPrefabs(Prefabs.ToDictionary(a => a.Key, b => b.Value.Count));
+            IsStarted = true;
+            MultiplayerGame = true;
+            PlayerIndex = playerIndex;
+            CurrentPlayer = 1;
             Started?.Invoke(this, EventArgs.Empty);
         }
 
@@ -151,7 +184,7 @@ namespace GameCore
         /// <param name="player">Номер игрока</param>
         /// <param name="validate">Проверять правильность растановки</param>
         /// <returns></returns>
-        bool SetPrefab(Prefab prefab, Point offset, out PointWithBorder[] places, int player = 0, bool validate = true, int prefabID = -1, Prefab.Rotate rotate = Prefab.Rotate.r0)
+        bool SetPrefab(Prefab prefab, Point offset, out PointWithBorder[] places, int player = -1, bool validate = true, int prefabID = -1, Prefab.Rotate rotate = Prefab.Rotate.r0)
         {
             places = prefab.GetPointsCursors(offset); // Получить координаты всех ячеек фигуры
             List<Point> allow; // Точки, где разрешено размещение
@@ -251,7 +284,7 @@ namespace GameCore
                         //UpdateCellView();
                         //if (Game.СurrentPlayer == 1) Game.СurrentPlayer = 2;
                         //else if (Game.СurrentPlayer == 2) Game.СurrentPlayer = 1;
-                        PrefabPlaced?.Invoke(this, new EventArgsPrefab(places.Select(a => a.Point).ToArray(), prefab, prefabID, rotate));
+                        PrefabPlaced?.Invoke(this, new EventArgsPrefab(places.Select(a => a.Point).ToArray(), prefabID, offset, rotate, player));
                     }
                 }
                 return succes2;
@@ -281,7 +314,7 @@ namespace GameCore
                     Point fixPoint = new Point(item.X + offset.X, item.Y + offset.Y);
                     if (!allow.Contains(fixPoint)) allow.Add(fixPoint);
                 }
-                PrefabPlaced?.Invoke(this, new EventArgsPrefab(places.Select(a => a.Point).ToArray(), prefab, prefabID, rotate));
+                PrefabPlaced?.Invoke(this, new EventArgsPrefab(places.Select(a => a.Point).ToArray(), prefabID, offset, rotate, player));
                 return true;
             }
         }
@@ -330,6 +363,15 @@ namespace GameCore
                 }
             }
 
+            public void Set(IDictionary<int, Player> values)
+            {
+                this.Clear();
+                foreach (var item in values)
+                {
+                    this.Add(item.Key, item.Value);
+                }
+            }
+
             //public void Add(int key, PlayerCellBase playerCell)
             //{
             //    base.Add(key, new Player(playerCell));
@@ -353,13 +395,15 @@ namespace GameCore
                 //Rectangle = rectangle;
             }
 
-            public EventArgsPrefab(Point[] points, Prefab prefab, int prefabID, Prefab.Rotate rotate) : base()
+            public EventArgsPrefab(Point[] points, int prefabID, Point location , Prefab.Rotate rotate, int playerID) : base()
             {
                 Points = points;
                 //Rectangle = rectangle;
-                Prefab = prefab;
+                //Prefab = prefab;
                 PrefabID = prefabID;
+                Location = location;
                 Rotate = rotate;
+                PlayerID = playerID;
             }
             /// <summary>
             /// Координаты раставленных точек
@@ -378,11 +422,13 @@ namespace GameCore
             /// ID оригинальной фигуры
             /// </summary>
             public int PrefabID { get; }
+            public Point Location { get; }
+
             /// <summary>
             /// Повороты
             /// </summary>
             public Prefab.Rotate Rotate { get; }
-
+            public int PlayerID { get; }
         }
 
         //public class EventArgsInt : EventArgs

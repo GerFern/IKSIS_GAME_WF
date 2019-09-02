@@ -1,4 +1,5 @@
-﻿using Gtk;
+﻿using GameCore.Interfaces;
+using Gtk;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -6,59 +7,126 @@ using UI = Gtk.Builder.ObjectAttribute;
 
 namespace gtk_test.Widgets
 {
-    class RoomPlayerState : Widget
+    public class RoomPlayerState : Widget
     {
         [UI] Label _playerName;
         [UI] ColorButton _color;
         [UI] CheckButton _ready;
-        private PlayerState playerState;
+        PlayerState PlayerState { get; }
 
-        public RoomPlayerState() : this(new Builder("GameWindow.glade")) { }
+        ClientManager ClientManager { get; }
+        public bool ReadOnlyState { get; }
+        bool toogleState = false;
+
+        public RoomPlayerState(ClientManager clientManager, PlayerState playerState, bool readOnlyState) : this(new Builder("GameWindow.glade"))
+        {
+            ClientManager = clientManager ?? throw new ArgumentNullException(nameof(clientManager));
+            PlayerState = playerState ?? throw new ArgumentNullException(nameof(playerState));
+            playerState.PropertyChanged += PlayerState_PropertyChanged;
+            this.Destroyed += new EventHandler((o, e) => { playerState.PropertyChanged -= PlayerState_PropertyChanged; });
+            ReadOnlyState = readOnlyState;
+            _color.Color = playerState.Color.ToGdkColor();
+            _ready.Active = playerState.Ready;
+            _playerName.Text = playerState.Name;
+            if (!readOnlyState)
+            {
+                _color.ColorSet += new EventHandler((o, e) =>
+                {
+                    if (!toogleState)
+                    {
+                        var c = _color.Color;
+                        if (PlayerState != null)
+                        {
+                            var sysColor = c.ToSystemColor();
+                            PlayerState.Color = sysColor;
+                            clientManager.Server.Color = sysColor;
+                        }
+                        ColorChanged?.Invoke(c);
+                    }
+                });
+                _ready.Toggled += new EventHandler((o, e) =>
+                {
+                    if (!toogleState)
+                    {
+                        var a = _ready.Active;
+                        if (PlayerState != null)
+                        {
+                            PlayerState.Ready = a;
+                            clientManager.Server.IsReady = a;
+                        }
+                        ToggleChanged?.Invoke(a);
+                    }
+                });
+            }
+            else
+            {
+                _ready.Toggled += new EventHandler((o, e) =>
+                 {
+                     if (_ready.Active != PlayerState.Ready)
+                         _ready.Active = PlayerState.Ready;
+                 });
+                _color.ColorSet += new EventHandler((o, e) =>
+                 {
+                     if(!toogleState)
+                     {
+                         var c1 = _color.Color;
+                         var c2 = PlayerState.Color.ToGdkColor();
+
+                         if (c1.Blue != c2.Blue || c1.Red != c2.Red || c1.Green != c2.Green)
+                             _color.Color = c2;
+                     }
+                 });
+            }
+        }
+
+        private void PlayerState_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            PlayerState playerState = (PlayerState)sender;
+            toogleState = true;
+            Application.Invoke(new EventHandler((o, eh) =>
+            {
+                switch (e.PropertyName)
+                {
+                    case nameof(playerState.Color):
+                        _color.Color = playerState.Color.ToGdkColor();
+                        //playerState.Color
+                        break;
+                    case nameof(playerState.Ready):
+                        _ready.Active = playerState.Ready;
+                        break;
+                    default:
+                        break;
+                }
+            }));
+            toogleState = false;
+        }
 
         private RoomPlayerState(Builder builder) : base(builder.GetObject(typeof(RoomPlayerState).Name).Handle)
         {
             builder.Autoconnect(this);
-            _color.ColorSet += new EventHandler((o, e) =>
-            {
-                var c = _color.Color;
-                if(PlayerState!=null)
-                {
-                    PlayerState.Color = c.ToSystemColor();
-                }
-                ColorChanged?.Invoke(c);
-            });
-            _ready.Toggled += new EventHandler((o, e) =>
-            {
-                var a = _ready.Active;
-                if(PlayerState!=null)
-                {
-                    PlayerState.Ready = a;
-                }
-                ToggleChanged?.Invoke(a);
-            });
         }
 
         public event Action<bool> ToggleChanged;
         public event Action<Gdk.Color> ColorChanged;
 
-        public PlayerState PlayerState
-        {
-            get => playerState;
-            set
-            {
-                if (playerState != null)
-                {
-                    playerState.ColorChanged -= PlayerState_ColorChanged;
-                    playerState.ReadyChanged -= PlayerState_ReadyChanged;
-                }
-                playerState = value;
-                PlayerName = playerState.Name;
-                Color = playerState.Color.ToGdkColor();
-                Ready = playerState.Ready;
-                playerState.ColorChanged += PlayerState_ColorChanged;
-                playerState.ReadyChanged += PlayerState_ReadyChanged;
-            }
-        }
+        //public PlayerState PlayerState
+        //{
+        //    get => playerState;
+        //    set
+        //    {
+        //        if (playerState != null)
+        //        {
+        //            playerState.ColorChanged -= PlayerState_ColorChanged;
+        //            playerState.ReadyChanged -= PlayerState_ReadyChanged;
+        //        }
+        //        playerState = value;
+        //        PlayerName = playerState.Name;
+        //        Color = playerState.Color.ToGdkColor();
+        //        Ready = playerState.Ready;
+        //        playerState.ColorChanged += PlayerState_ColorChanged;
+        //        playerState.ReadyChanged += PlayerState_ReadyChanged;
+        //    }
+        //}
 
         private void PlayerState_ReadyChanged(object sender, EventArgs e)
         {

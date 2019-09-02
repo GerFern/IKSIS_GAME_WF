@@ -10,7 +10,12 @@ using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Timers;
 using Window = Gtk.Window;
-using Controller = gtk_test.GameClientController;
+//using Controller = gtk_test.GameClientController;
+using EmptyTest.TStreamHandler;
+using System.Net;
+using System.Threading;
+using Timer = System.Timers.Timer;
+
 namespace gtk_test
 {
     class Program
@@ -28,8 +33,14 @@ namespace gtk_test
         static RoomWidget RoomWidget;
         static Cairo.Operator op1;
         static Cairo.Operator op2;
-        static Process GameServer;
-        static Client Client;
+        //static Process GameServer;
+        //static Client Client;
+        static GameCore.Interfaces.ClientManager ClientManager { get; set; }
+        static EmptyTest.Proxy.Client<GameCore.Interfaces.IServer, GameCore.Interfaces.ClientManager> Client { get; set; }
+        static void Connect(EndPoint endPoint)
+        {
+            Client = new EmptyTest.Proxy.Client<GameCore.Interfaces.IServer, GameCore.Interfaces.ClientManager>(ClientManager, endPoint);
+        }
         static Game Game;
         [STAThread]
         static void Main(string[] args)
@@ -42,18 +53,29 @@ namespace gtk_test
             MainWidget = new MainWidget();
             ConnectWidget = new ConnectWidget();
             RoomWidget = new RoomWidget();
-            Client = new Client();
-            Controller.Client = Client;
+            //ClientManager = new GameCore.Interfaces.ClientManager(new Game());
+            //EmptyTest.Proxy.Client<GameCore.Interfaces.IServer, GameCore.Interfaces.ClientManager> client =
+            //    new EmptyTest.Proxy.Client<GameCore.Interfaces.IServer, GameCore.Interfaces.ClientManager>(ClientManager, endPoint);
+            //Client = new Client(StaticDataHandlers.ServerDataHandler, StaticDataHandlers.ClientDataHandler);
+            //Controller.Client = Client;
             mv = new mw();
-            ConnectWidget.Connecting += new EventHandler<EventArgsValue<(System.Net.IPEndPoint EndPoint, string HostName)>>((o, e) =>
-            {
-                if(Controller.EnterLobby(e.Value.EndPoint))
-                {
-                    mv.stack.VisibleChild = RoomWidget;
-                    Client.Game = Game;
-                    Controller.Game = Game;
-                }
-            });
+            //mv.Drawn += GameWindow_Drawn;
+            ConnectWidget.Connecting += ConnectWidget_Connecting;
+
+            //ConnectWidget.Connecting += new EventHandler<EventArgsValue<(System.Net.IPEndPoint EndPoint, string HostName)>>((o, e) =>
+            //{
+            //    Connect(e.Value.EndPoint);
+
+            //    ClientManager.Server = Client.Server;
+            //    mv.stack.VisibleChild = RoomWidget;
+            //    //if(Controller.EnterLobby(e.Value.EndPoint))
+            //    //{
+            //    //    mv.stack.VisibleChild = RoomWidget;
+            //    //    Client.Game = Game;
+            //    //    Controller.Game = Game;
+            //    //}
+            //});
+
             ConnectWidget.Cancel += new EventHandler((o, e) => mv.stack.VisibleChild = MainWidget);
             var asm = System.Reflection.Assembly.GetExecutingAssembly();
             var strs=asm.GetManifestResourceNames();
@@ -63,11 +85,11 @@ namespace gtk_test
             MainWidget.ButtonCreate += MainWindow_ButtonCreate;
             MainWidget.ButtonSettings += MainWindow_ButtonSettings;
             MainWidget.ButtonQuit += MainWindow_ButtonQuit;
-            Controller.Init();
-            Controller.AddPlayer += new Action<PlayerState>(a =>
-            {
-                     RoomWidget.AddPlayerState(a);
-            });
+            //Controller.Init();
+            //Controller.AddPlayer += new Action<PlayerState>(a =>
+            //{
+            //         RoomWidget.AddPlayerState(a);
+            //});
 
             mv.stack.Add(MainWidget);
             mv.stack.Add(ConnectWidget);
@@ -91,22 +113,26 @@ namespace gtk_test
             //}
 
 
-            CssProvider cssProvider = new CssProvider();
-            var t =
-            System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("test.css");
-            System.IO.StreamReader streamReader = new System.IO.StreamReader(t);
-            string data =
-            streamReader.ReadToEnd();
+            //CssProvider cssProvider = new CssProvider();
+            //var t =
+            //System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("test.css");
+            //System.IO.StreamReader streamReader = new System.IO.StreamReader(t);
+            //string data =
+            //streamReader.ReadToEnd();
 
-            //string data = System.IO.File.ReadAllText(Environment.CurrentDirectory + "\\Css\\test.css");
-            cssProvider.LoadFromData(data);
-            MainWidget.StyleContext.AddProvider(cssProvider, 800);
+            ////string data = System.IO.File.ReadAllText(Environment.CurrentDirectory + "\\Css\\test.css");
+            //cssProvider.LoadFromData(data);
+            //MainWidget.StyleContext.AddProvider(cssProvider, 800);
             mv.ShowAll();
             //MainWindow.Child.Visible = false;
             //timer.AutoReset = true;
             timer.Elapsed += Timer_Elapsed;
             timer.Start();
-            Application.Run();
+            //Application.Run();
+            while(true)
+            {
+                Application.RunIteration();
+            }
             return;
 
             //Gtk.Window myWin = new Gtk.Window("My first GTK# Application! ");
@@ -240,6 +266,29 @@ namespace gtk_test
             //Application.Run();
         }
 
+        private static void ConnectWidget_Connecting(object sender, ConnectWidget.EventArgsConnecting e)
+        {
+            Client = e.Client;
+            ClientManager = Client.ClientManager;
+            Game = ClientManager.Game;
+
+            //RoomWidget = e.RoomWidget;
+            //mv.stack.Add(e.RoomWidget);
+            RoomWidget.SetClientManager(ClientManager);
+            mv.stack.VisibleChild = RoomWidget;
+            ClientManager.EventGameStarted += ClientManager_EventGameStarted;
+        }
+
+        private static void ClientManager_EventGameStarted()
+        {
+            Application.Invoke(new EventHandler((o, e) =>
+            {
+                GameWidget.Game = Game;
+                GameWidget.GameWidgetOver.SetClientManager(ClientManager);
+                mv.stack.VisibleChild = GameWidget;
+            }));
+        }
+
         private static void MainWindow_ButtonQuit(object sender, EventArgs e)
         {
             mv.Close();
@@ -260,10 +309,11 @@ namespace gtk_test
 
         private static void MainWindow_ButtonCreate(object sender, EventArgs e)
         {
-            System.Diagnostics.ProcessStartInfo processStartInfo = new System.Diagnostics.ProcessStartInfo("GameServer.exe");
-            //processStartInfo.RedirectStandardOutput = true;
-            //processStartInfo.Domain = "aaaaa";
-            GameServer = System.Diagnostics.Process.Start(processStartInfo);
+            new Thread(() => GameServer.Program.Main(new string[] { "192.168.0.49", "7979" })) { Name = "GameServerThread"}.Start();
+            //System.Diagnostics.ProcessStartInfo processStartInfo = new System.Diagnostics.ProcessStartInfo("GameServer.exe");
+            ////processStartInfo.RedirectStandardOutput = true;
+            ////processStartInfo.Domain = "aaaaa";
+            //GameServer = System.Diagnostics.Process.Start(processStartInfo);
             //CloseHandle(p.Handle);
             //p.WaitForExit();
         }
@@ -282,27 +332,28 @@ namespace gtk_test
         internal static void InitOfflineGame()
         {
             Game = new GameCore.Game();
-            Game.Prefabs.Add(new System.Drawing.Point(0, 0));
-            Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-                             new System.Drawing.Point(0, 1));
-            Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-                             new System.Drawing.Point(0, 1),
-                             new System.Drawing.Point(1, 0));
-            Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-                             new System.Drawing.Point(0, 1),
-                             new System.Drawing.Point(1, 0),
-                             new System.Drawing.Point(1, 1));
-            Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-                             new System.Drawing.Point(0, 1),
-                             new System.Drawing.Point(0, 2),
-                             new System.Drawing.Point(1, 0));
+            Game.Prefabs.Set(GameCore.Interfaces.ServerManager.standartPrefabLimit);
+            //Game.Prefabs.Add(new System.Drawing.Point(0, 0));
+            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+            //                 new System.Drawing.Point(0, 1));
+            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+            //                 new System.Drawing.Point(0, 1),
+            //                 new System.Drawing.Point(1, 0));
+            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+            //                 new System.Drawing.Point(0, 1),
+            //                 new System.Drawing.Point(1, 0),
+            //                 new System.Drawing.Point(1, 1));
+            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+            //                 new System.Drawing.Point(0, 1),
+            //                 new System.Drawing.Point(0, 2),
+            //                 new System.Drawing.Point(1, 0));
 
             System.Drawing.Color blue = System.Drawing.Color.FromArgb(64, 128, 255);
             System.Drawing.Color red = System.Drawing.Color.FromArgb(192, 32, 32);
-            System.Drawing.Color green = System.Drawing.Color.FromArgb(32, 192, 32);
+            //System.Drawing.Color green = System.Drawing.Color.FromArgb(32, 192, 32);
             Game.Players.Add(1, blue);
             Game.Players.Add(2, red);
-            Game.Players.Add(3, green);
+            //Game.Players.Add(3, green);
             Game.CurrentPlayer = 1;
             Game.Start(15, 15);
             GameWidget.Game = Game;
@@ -326,7 +377,7 @@ namespace gtk_test
             t.Stop();
             const double min = 0.65;
             const double max = 0.95;
-            const double d = 0.015;
+            const double d = 0.01;
             switch (rgb)
             {
                 case rgbadd.addr:

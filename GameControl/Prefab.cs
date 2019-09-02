@@ -5,9 +5,28 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Data;
 using System.Linq;
+using GameCore.Interfaces;
 
 namespace GameCore
 {
+    public class PrefabLimit
+    {
+        public PrefabLimit(Interfaces.PrefabLimit value)
+        {
+            Count = value.count;
+            Prefab = new Prefab(value.prefab.points);
+        }
+
+        public PrefabLimit(int count, Prefab prefab)
+        {
+            Count = count;
+            Prefab = prefab ?? throw new ArgumentNullException(nameof(prefab));
+        }
+
+        public int Count { get; }
+        public Prefab Prefab { get; }
+    }
+
     public class Prefab
     {
         PointWithBorder[,] cells;

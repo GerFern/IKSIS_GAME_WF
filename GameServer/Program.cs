@@ -1,4 +1,7 @@
-﻿using System;
+﻿using EmptyTest.TStreamHandler;
+using GameCore;
+using GameCore.Structs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -9,8 +12,11 @@ using System.Threading;
 namespace GameServer
 {
 
-    class Program
+    public class Program
     {
+        //static DataHandler serverDataHandler;
+        //static DataHandler clientDataHandler;
+
         private const int MF_BYCOMMAND = 0x00000000;
         public const int SC_CLOSE = 0xF060;
         public const int MF_ENABLED = 0x0000;
@@ -29,21 +35,22 @@ namespace GameServer
 
 
 
+        static GameCore.Game Game { get; set; }
+        static  GameCore.Interfaces.ServerManager ServerManager { get; set; }
 
-
-        public static Server Server { get; set; }
+        //public static Server Server { get; set; }
         public static Random Random = new Random();
-        public static int GetRandID()
-        {
-            int r;
-            do
-            {
-                r = Random.Next();
-            } while (Server.Clients.Any(a => a.PublicID == r));
-            return r;
-        }
+        //public static int GetRandID()
+        //{
+        //    int r;
+        //    do
+        //    {
+        //        r = Random.Next();
+        //    } while (ServerManager.Clients.Any(a => a.PublicID == r));
+        //    return r;
+        //}
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             IntPtr intPtr = GetSystemMenu(GetConsoleWindow(), false);
             DeleteMenu(intPtr, SC_CLOSE, MF_BYCOMMAND);
@@ -85,8 +92,13 @@ namespace GameServer
             }
             Console.WriteLine("{0}:{1}", iPAddress, port);
             IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, port);
-            Server = new Server(iPEndPoint);
-            //Server.Start();
+            Game = new Game();
+            ServerManager = new GameCore.Interfaces.ServerManager(Game);
+            EmptyTest.Proxy.Server<GameCore.Interfaces.ServerManager, GameCore.Interfaces.IClient, ClientData> server =
+                new EmptyTest.Proxy.Server<GameCore.Interfaces.ServerManager, GameCore.Interfaces.IClient, ClientData>(ServerManager);
+            ServerManager.SetServer(server);
+            server.Launch(iPEndPoint);
+   
             Thread thread = new Thread(() =>
             {
                 try
@@ -108,7 +120,7 @@ namespace GameServer
             })
             { Name = "ConsoleRead" };
             thread.Start();
-            thread.Join();
+            //thread.Join();
             //GameServer gameServer = new GameServer(iPAddress, port);
             //gameServer.StartServer();
             //Console.ReadLine();
@@ -131,10 +143,10 @@ namespace GameServer
         }
     }
 
-    public class ClientList:List<PlayerClient>
-    {
+    //public class ClientList:List<PlayerClient>
+    //{
 
-    }
+    //}
 
     //public class Clients:Dictionary<EndPoint, ClientPlayer>
     //{

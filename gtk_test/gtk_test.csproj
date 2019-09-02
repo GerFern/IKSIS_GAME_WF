@@ -28,6 +28,6 @@
     <ProjectReference Include="..\GameServer\GameServer.csproj">
       <Private>true</Private>
     </ProjectReference>
-    <ProjectReference Include="C:\Users\Home\source\repos\NodeTest\NodeTest\NodeTest.csproj" />
+    <ProjectReference Include="C:\Users\Home\source\repos\NodeTest\EmptyTest\EmptyTest.csproj" />
   </ItemGroup>
 </Project>

@@ -19,6 +19,8 @@ namespace gtk_test.Windows
         private int _counter;
 
         private GameCore.Game game;
+        public void SetClientManager(GameCore.Interfaces.ClientManager clientManager) => gameWidget.SetClientManager(clientManager);
+        
         public Game Game
         {
             get => game;

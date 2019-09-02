@@ -1,5 +1,6 @@
 ﻿#define test
 
+using GameCore.Interfaces;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -110,93 +111,111 @@ namespace GameCore
     //}
 
 
-    public class PrefabCollection : Dictionary<int, (int Count, Prefab Prefab)>, ICollection<Prefab>, ICollection<(int count, Prefab prefab)>
+    public class PrefabCollection : Dictionary<int, PrefabLimit>/*, ICollection<Prefab>, ICollection<PrefabLimit>*/
     {
-        public bool IsReadOnly { get => false; }
-
-        public void Add(params Point[] points)
+        public PrefabCollection()
         {
-            //int key = values.Keys.Count > 0 ? values.Keys.Max() + 1 : 0;
-            Add(new Prefab(points));
         }
 
-        public void Add(int count, params Point[] points)
+        public PrefabCollection(IDictionary<int, PrefabLimit> collection)
         {
-            //int key = values.Keys.Count > 0 ? values.Keys.Max() + 1 : 0;
-            Add(count, new Prefab(points));
-        }
-
-        public void Add(Prefab item)
-        {
-            int key = Keys.Count > 0 ? Keys.Max() + 1 : 0;
-            Add(key, (1, item));
-        }
-
-        public void Add(int count, Prefab item)
-        {
-            int key = Keys.Count > 0 ? Keys.Max() + 1 : 0;
-            Add(key, (count, item));
-        }
-
-        public void Add((int count, Prefab prefab) item)
-        {
-            int key = Keys.Count > 0 ? Keys.Max() + 1 : 0;
-            Add(key, item);
-        }
-
-        public bool Contains(Prefab item)
-        {
-            return ((ICollection<Prefab>)this).Contains(item);
-        }
-
-        public bool Contains((int count, Prefab prefab) item)
-        {
-            return this.ContainsValue(item);
-        }
-
-        public void CopyTo(Prefab[] array, int arrayIndex)
-        {
-            //this.Values.CopyTo(array.ToArray<Prefab>(), arrayIndex);
-            ((ICollection<Prefab>)this).CopyTo(array, arrayIndex);
-        }
-
-        public void CopyTo((int count, Prefab prefab)[] array, int arrayIndex)
-        {
-            this.Values.CopyTo(array, arrayIndex);
-        }
-
-        public bool Remove(Prefab item)
-        {
-            foreach (var localitem in this)
+            foreach (var item in collection)
             {
-                if (localitem.Value.Equals(item))
-                {
-                    this.Remove(localitem.Key);
-                    return true;
-                }
+                Add(item.Key, item.Value);
             }
-            return false;
         }
 
-        public bool Remove((int count, Prefab prefab) item)
+        public void Set(IDictionary<int, PrefabLimit> prefabs)
         {
-            throw new NotImplementedException();
+            this.Clear();
+            foreach (var item in prefabs)
+            {
+                Add(item.Key, item.Value);
+            }
         }
 
-        //internal Dictionary<int, int> ToDictionary(Func<object, object> p1, Func<object, int> p2)
+        public void Set(IDictionary<int, Interfaces.PrefabLimit> prefabs)
+        {
+            this.Clear();
+            foreach (var item in prefabs)
+            {
+                Add(item.Key, new PrefabLimit(item.Value));
+            }
+        }
+
+        //public void Add(params Point[] points)
+        //{
+        //    //int key = values.Keys.Count > 0 ? values.Keys.Max() + 1 : 0;
+        //    Add(new Prefab(points));
+        //}
+
+        //public void Add(int count, params Point[] points)
+        //{
+        //    //int key = values.Keys.Count > 0 ? values.Keys.Max() + 1 : 0;
+        //    Add(count, new Prefab(points));
+        //}
+
+        //public void Add(Prefab item)
+        //{
+        //    int key = Keys.Count > 0 ? Keys.Max() + 1 : 0;
+        //    Add(key, new Pre);
+        //}
+
+        //public void Add(int count, Prefab item)
+        //{
+        //    int key = Keys.Count > 0 ? Keys.Max() + 1 : 0;
+        //    Add(key, (count, item));
+        //}
+
+        //public void Add((int count, Prefab prefab) item)
+        //{
+        //    int key = Keys.Count > 0 ? Keys.Max() + 1 : 0;
+        //    Add(key, item);
+        //}
+
+        //public bool Contains(Prefab item)
+        //{
+        //    return ((ICollection<Prefab>)this).Contains(item);
+        //}
+
+        //public bool Contains((int count, Prefab prefab) item)
+        //{
+        //    return this.ContainsValue(item);
+        //}
+
+        //public void CopyTo(Prefab[] array, int arrayIndex)
+        //{
+        //    //this.Values.CopyTo(array.ToArray<Prefab>(), arrayIndex);
+        //    ((ICollection<Prefab>)this).CopyTo(array, arrayIndex);
+        //}
+
+        //public void CopyTo((int count, Prefab prefab)[] array, int arrayIndex)
+        //{
+        //    this.Values.CopyTo(array, arrayIndex);
+        //}
+
+        //public bool Remove(Prefab item)
+        //{
+        //    foreach (var localitem in this)
+        //    {
+        //        if (localitem.Value.Equals(item))
+        //        {
+        //            this.Remove(localitem.Key);
+        //            return true;
+        //        }
+        //    }
+        //    return false;
+        //}
+
+        //public bool Remove((int count, Prefab prefab) item)
         //{
         //    throw new NotImplementedException();
         //}
 
-        IEnumerator<Prefab> IEnumerable<Prefab>.GetEnumerator()
-        {
-           return  Values.Select(a=>a.Prefab).GetEnumerator();
-        }
-
-        IEnumerator<(int count, Prefab prefab)> IEnumerable<(int count, Prefab prefab)>.GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
+        ////internal Dictionary<int, int> ToDictionary(Func<object, object> p1, Func<object, int> p2)
+        ////{
+        ////    throw new NotImplementedException();
+        ////}
     }
 
 

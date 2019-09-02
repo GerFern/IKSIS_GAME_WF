@@ -1,4 +1,6 @@
-﻿using Gtk;
+﻿using EmptyTest.Proxy;
+using GameCore.Interfaces;
+using Gtk;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -32,7 +34,10 @@ namespace gtk_test.Widgets
                               iPAddress = iPHostEntry.AddressList[0];
                           }
                           IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, port);
-                          Connecting?.Invoke(this, new EventArgsValue<(IPEndPoint, string)>((iPEndPoint, iPHostEntry.HostName)));
+                          ClientManager clientManager = new ClientManager(new GameCore.Game(), "A");
+                          Client<IServer, ClientManager> client = new Client<IServer, ClientManager>(clientManager, iPEndPoint);
+                          clientManager.SetServer(client.Server);
+                          Connecting?.Invoke(this, new EventArgsConnecting(iPEndPoint, client));
                       }
                       else
                       {
@@ -47,7 +52,7 @@ namespace gtk_test.Widgets
             _cvCancel.Clicked += new EventHandler((o, e) => Cancel?.Invoke(this, EventArgs.Empty));
         }
 
-        public event EventHandler<EventArgsValue<(IPEndPoint EndPoint, string HostName)>> Connecting;
+        public event EventHandler<EventArgsConnecting> Connecting;
         public event EventHandler<EventArgsValue<Exception>> ErrorValidating;
         public event EventHandler Cancel;
 
@@ -58,6 +63,18 @@ namespace gtk_test.Widgets
             {
                 IPHostEntry = value;
             }
+        }
+
+        public class EventArgsConnecting:EventArgs
+        {
+            public EventArgsConnecting(EndPoint endPoint,  Client<IServer, ClientManager> client)
+            {
+                EndPoint = endPoint ?? throw new ArgumentNullException(nameof(endPoint));
+                Client = client ?? throw new ArgumentNullException(nameof(client));
+            }
+
+            public EndPoint EndPoint { get; }
+            public Client<IServer, ClientManager> Client { get; }
         }
     }
 }

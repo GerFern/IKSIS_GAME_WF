@@ -18,6 +18,7 @@ namespace gtk_test
         public PointD Cursor { get; private set; }
         public PointD Location { get; private set; }
         public GameCore.Game Game { get; set; }
+        public GameCore.Interfaces.ClientManager ClientManager { get; private set; }
         public int SelectedPrefabID
         {
             get => _selectedPrefabID;
@@ -242,6 +243,7 @@ namespace gtk_test
         {
             var evnt = args.Event;
             if (Game == null) return;
+            if (!Game.AllowSetPrefab) return;
             if (evnt.Button == 1)
             {
                 if (RotatedPrefab == null) return;
@@ -252,7 +254,16 @@ namespace gtk_test
                 pointD.Y -= dy * 50;
                 Point point = GetPosition(pointD);
                 if (point.X >= 0 && point.Y >= 0 && point.X + RotatedPrefab.Size.Width <= Game.Columns && point.Y + RotatedPrefab.Size.Height <= Game.Rows)
-                    Game.SetPrefab(SelectedPrefabID, Rotate, new System.Drawing.Point(point.X, point.Y), out _, 1, true, false);
+                {
+                    System.Drawing.Point location = new System.Drawing.Point(point.X, point.Y);
+
+                    if (ClientManager == null)
+                    {
+                        Game.SetPrefab(SelectedPrefabID, Rotate, location, out _, 0, true, false);
+                    }
+                    else
+                        ClientManager.Server.Place(SelectedPrefabID, location, Rotate);
+                }
             }
             else if (evnt.Button == 2)
             {
@@ -388,6 +399,26 @@ namespace gtk_test
             ViewRect = new Cairo.Rectangle(-TranslateX, -TranslateY, alloc.Width / Scale, alloc.Height / Scale);
             Center = new PointD((ViewRect.X + ViewRect.X + ViewRect.Width) / 2, (ViewRect.Y + ViewRect.Y + ViewRect.Height) / 2);
             //Center = Location;
+        }
+
+        public void SetClientManager(GameCore.Interfaces.ClientManager clientManager)
+        {
+            ClientManager = clientManager;
+            Game = ClientManager.Game;
+            Game.PrefabPlaced += Game_PrefabPlaced;
+            ClientManager.EventPlace += ClientManager_EventPlace;
+        }
+
+        private void Game_PrefabPlaced(object sender, Game.EventArgsPrefab e)
+        {
+            Application.Invoke(new EventHandler((o, e) =>
+            {
+                DrawingArea.QueueDraw();
+            }));
+        }
+
+        private void ClientManager_EventPlace(int arg1, int arg2, System.Drawing.Point arg3, Prefab.Rotate arg4)
+        {
         }
 
         //protected override bool OnButtonPressEvent(EventButton evnt)
@@ -838,6 +869,6 @@ namespace gtk_test
             new Gdk.Color(color.R, color.G, color.B);
 
         public static System.Drawing.Color ToSystemColor(this Gdk.Color color) =>
-            System.Drawing.Color.FromArgb(color.Red, color.Green, color.Blue);
+            System.Drawing.Color.FromArgb(color.Red/256, color.Green/256, color.Blue/256);
     }
 }
