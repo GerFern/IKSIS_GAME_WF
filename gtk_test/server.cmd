@@ -1,0 +1,3 @@
+﻿
+dotnet ./GameServer.dll
+pause

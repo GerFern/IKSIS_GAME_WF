@@ -3,6 +3,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
 
@@ -31,6 +32,7 @@ namespace GameCore
 
         #region PUBLICMEMBERS
         #region public properties
+        public IReadOnlyList<int> WinnerPlayers { get; }
         public Color BackgroundColor
         {
             get => backgroundColor;
@@ -67,6 +69,7 @@ namespace GameCore
         public int Rows { get; private set; }
         public int Columns { get; private set; }
         public bool IsStarted { get; private set; }
+        public bool IsGameEnd { get; private set; }
         public bool AllowSetPrefab => !MultiplayerGame || PlayerIndex == CurrentPlayer;
         #endregion // public properties
         #region public methods
@@ -97,6 +100,16 @@ namespace GameCore
             Started?.Invoke(this, EventArgs.Empty);
         }
 
+        public int GetPlayerCount(int playerIndex)
+        {
+            int counter = 0;
+            foreach (var item in Cells)
+            {
+                if (item.PlayerOwner == playerIndex)
+                    counter++;
+            }
+            return counter;
+        }
 
         public void StartMultiplayer(Size gameSize, int playerIndex)
         {
@@ -119,6 +132,22 @@ namespace GameCore
             PlayerIndex = playerIndex;
             CurrentPlayer = 1;
             Started?.Invoke(this, EventArgs.Empty);
+        }
+
+
+        public void GiveUpPlayer(int index)
+        {
+            playersGivingUp.Add(index);
+            if (playersGivingUp.Count >= PlayersCount)
+            {
+                IsGameEnd = true;
+                var dict = Players.ToDictionary(a => a.Key, a => GetPlayerCount(a.Key));
+                int max = dict.Max(a => a.Value);
+                winnerPlayers.Clear();
+                winnerPlayers.AddRange(dict.Where(a => a.Value == max).Select(a => a.Key));
+                GameOver?.Invoke(this, EventArgs.Empty);
+            }
+            else if (index == CurrentPlayer) NextPlayer();
         }
 
         /// <summary>
@@ -150,7 +179,10 @@ namespace GameCore
             else return false;
         }
 
-        public Game() { }
+        public Game()
+        {
+            WinnerPlayers = new ReadOnlyCollection<int>(winnerPlayers);
+        }
         //public Game(PlayerCellBase[] players, PrefabCollection prefabs)
         //{
         //    Players.Add(0, new EmptyCell());
@@ -172,7 +204,9 @@ namespace GameCore
         #endregion // PUBLICMEMBERS
 
         #region PRIVATEMEMBERS
+        List<int> playersGivingUp = new List<int>();
         Dictionary<int, List<Point>> allowPointsForPlayer = new Dictionary<int, List<Point>>();
+        private List<int> winnerPlayers = new List<int>();
         private Color backgroundColor;
         #region private methods
         /// <summary>
@@ -201,36 +235,41 @@ namespace GameCore
                     if (rectValidate.Contains(t))
                         if (this[t].PlayerOwner != 0) // Если координата занята другой фигурой
                         {
-                            succes1 = false;
-                            break;
+                            return false;
+                            //succes1 = false;
+                            //break;
                         }
                     t = item.Point.Up();
                     if (rectValidate.Contains(t))
                         if (this[t].PlayerOwner == player)
                         {
-                            succes1 = false;
-                            break;
+                            return false;
+                            //succes1 = false;
+                            //break;
                         }
                     t = item.Point.Down();
                     if (rectValidate.Contains(t))
                         if (this[t].PlayerOwner == player)
                         {
-                            succes1 = false;
-                            break;
+                            return false;
+                            //succes1 = false;
+                            //break;
                         }
                     t = item.Point.Left();
                     if (rectValidate.Contains(t))
                         if (this[t].PlayerOwner == player)
                         {
-                            succes1 = false;
-                            break;
+                            return false;
+                            //succes1 = false;
+                            //break;
                         }
                     t = item.Point.Right();
                     if (rectValidate.Contains(t))
                         if (this[t].PlayerOwner == player)
                         {
-                            succes1 = false;
-                            break;
+                            return false;
+                            //succes1 = false;
+                            //break;
                         }
                 }
                 if (succes1)
@@ -276,7 +315,7 @@ namespace GameCore
                             if (!allow.Contains(fixPoint)) allow.Add(fixPoint);
                         }
                         if (validate)
-                            CurrentPlayer = (CurrentPlayer % PlayersCount) + 1;
+                            NextPlayer();
                         //foreach (var item in remoweAllow)
                         //{
                         //    allow.Remove(item);
@@ -287,6 +326,7 @@ namespace GameCore
                         PrefabPlaced?.Invoke(this, new EventArgsPrefab(places.Select(a => a.Point).ToArray(), prefabID, offset, rotate, player));
                     }
                 }
+                else return false;
                 return succes2;
             }
             else
@@ -318,6 +358,15 @@ namespace GameCore
                 return true;
             }
         }
+
+        private void NextPlayer()
+        {
+            if (playersGivingUp.Count >= PlayersCount) return;
+            CurrentPlayer = (CurrentPlayer % PlayersCount) + 1;
+            if (playersGivingUp.Contains(CurrentPlayer)) NextPlayer();
+        }
+
+
         #endregion // private methods
         #endregion // PRIVATEMEMBERS
 

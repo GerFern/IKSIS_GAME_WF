@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -58,6 +60,17 @@ namespace GameCore
             byte b2 = (byte)add;
             byte b3 = (byte)((b1 + b2) % 4);
             return (Prefab.Rotate)b3 | ((rotate ^ add) & (Prefab.Rotate.horizontal | Prefab.Rotate.vertical));
+        }
+
+        public static string DescriptionAttr<T>(this T source)
+        {
+            FieldInfo fi = source.GetType().GetField(source.ToString());
+
+            DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(
+                typeof(DescriptionAttribute), false);
+
+            if (attributes != null && attributes.Length > 0) return attributes[0].Description;
+            else return source.ToString();
         }
     }
 }

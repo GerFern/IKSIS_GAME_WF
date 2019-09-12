@@ -41,7 +41,7 @@ namespace GameCore.Interfaces
         Thread startGameTimer;
         Server<ServerManager, IClient, ClientData> Server { get; set; }
         IReadOnlyDictionary<int, ClientInfo<IClient, ClientData>> ClientInfoCollection => Server.Clients;
-        IClient[] Clients => ClientInfoCollection.Select(a => a.Value.Client).ToArray();
+        IClient[] Clients => ClientInfoCollection.Select(a => a.Value.ClientInterface).ToArray();
         //Size GameSizeStart
         //{
         //    get => gameSizeStart;
@@ -70,7 +70,7 @@ namespace GameCore.Interfaces
                 {
                     shuffled[i].Value.Index = i;
                 }
-                ForEachClient(a => a.GameStart(new Size(game.Columns, game.Rows), prefabLimitDict, players.ToDictionary(a => a.Key, b => (b.Value.Index, color: b.Value.Color))));
+                ForEachClient(a => a.GameStart(new Size(game.Columns, game.Rows), prefabLimitDict, players.ToDictionary(b => b.Key, c => (c.Value.Index, color: c.Value.Color))));
             });
             game.PrefabPlaced += new EventHandler<GameCore.Game.EventArgsPrefab>((o, e) =>
             {
@@ -136,8 +136,8 @@ namespace GameCore.Interfaces
             } while (!players.ContainsKey(id));
             return id;
         }
-        static IClient Client => Server<ServerManager, IClient, Structs.ClientData>.CurrentClient;
-        static ClientInfo<IClient, ClientData> ClientInfo => Server<ServerManager, IClient, Structs.ClientData>.CurrentClientInfo;
+        static IClient Client => ClientInfo<IClient, Structs.ClientData>.CurrentClientInterface;
+        static ClientInfo<IClient, ClientData> ClientInfo => ClientInfo<IClient, Structs.ClientData>.CurrentClientInfo;
         static Structs.ClientData ClientData => ClientInfo.Data;
         static PlayerState Player => ClientInfo.Data.playerState;
         bool isGameRunning;
@@ -149,7 +149,18 @@ namespace GameCore.Interfaces
         {
             foreach (var item in ClientInfoCollection.Values)
             {
-                new Thread(() => action.Invoke(item.Client)) { Name = $"ActionPlayer_{item.Data.name}({item.UID}_" }.Start();
+
+                new Thread(() =>
+                {
+                    try
+                    {
+                        action.Invoke(item.ClientInterface);
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+                }){ Name = $"ActionPlayer_{item.Data.name}({item.UID}_" }.Start();
             }
         }
 
@@ -160,7 +171,7 @@ namespace GameCore.Interfaces
             {
                 item.Value.Index = index++;
             }
-            int size = 15 + (players.Count * random.Next(4, 6));
+            int size = 5 + (players.Count * random.Next(4, 6));
             gameSizeStart = new Size(size + random.Next(-5, 5), size + random.Next(-5, 5));
             gameController = new GameCore.Game();
             gameController.Prefabs.Set(standartPrefabLimit);
@@ -168,7 +179,8 @@ namespace GameCore.Interfaces
             gameController.Start(gameSizeStart.Width, gameSizeStart.Height);
             ForEachClient(a => a.ReadyTimer(0));
             Thread.Sleep(200);
-            ForEachClient(a => a.GameStart(gameSizeStart, standartPrefabLimit, players.ToDictionary(a => a.Key, a => (a.Value.Index, a.Value.Color))));
+            ForEachClient(a => a.GameStart(gameSizeStart, standartPrefabLimit, players.ToDictionary(b => b.Key, c => (c.Value.Index, c.Value.Color))));
+            Console.WriteLine("GameStarted");
             isGameRunning = true;
             //TODO start game
         }
@@ -189,6 +201,7 @@ namespace GameCore.Interfaces
                     var player = Player;
                     player.Ready = value;
                     ForEachClient(client => client.PlayerReadyChange(value, player.ID));
+                    Console.WriteLine($"IsReady {player.Name} {value}");
                     CheckAllReady();
                 }
             }
@@ -229,6 +242,7 @@ namespace GameCore.Interfaces
                 data.logIn = true;
                 players.Add(clientInfo.UID, data.playerState);
                 ForEachClient(a => a.NewPlayer(data.playerState));
+                Console.WriteLine($"NewPlayer {Name}");
             }
             return data.playerState;
 
@@ -269,6 +283,24 @@ namespace GameCore.Interfaces
         public void Message(string text)
         {
             ForEachClient(a => a.Message(Player.ID, text));
+        }
+
+        public void GiveUp()
+        {
+            if(isGameRunning)
+            {
+                var index = Player.Index;
+                var currentPlayer = gameController.CurrentPlayer;
+                gameController.GiveUpPlayer(index);
+                if (currentPlayer == gameController.CurrentPlayer)
+                    ForEachClient(a => a.GiveUpPlayer(index));
+                else
+                    ForEachClient(a =>
+                    {
+                        a.GiveUpPlayer(index);
+                        a.ChangePlayer(gameController.CurrentPlayer);
+                    });
+            }
         }
 
         //public void SetGameSize(Size size)

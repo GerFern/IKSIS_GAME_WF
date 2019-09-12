@@ -4,6 +4,7 @@ using Gdk;
 using Gtk;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Border = GameCore.Border;
 using Color = Cairo.Color;
@@ -14,10 +15,64 @@ namespace gtk_test
 {
     class GameWidgetOver
     {
+        public string message = "Ёё!&;Hello, РщЪъцЦ<>q#@";
         public DrawingArea DrawingArea { get; }
         public PointD Cursor { get; private set; }
         public PointD Location { get; private set; }
-        public GameCore.Game Game { get; set; }
+        public bool Is3D
+        {
+            get => is3D;
+            set
+            {
+                is3D = value;
+                DrawingArea.QueueDraw();
+            }
+        }
+        public int HeigthCell
+        {
+            get => heigthCell;
+            set
+            {
+                heigthCell = value;
+                DrawingArea.QueueDraw();
+            }
+        }
+        public GameCore.Game Game
+        {
+            get => game;
+            set
+            {
+                game = value;
+                game.GameOver += Game_GameOver;
+            }
+        }
+
+        Cairo.Color? gameWinner;
+
+        private void Game_GameOver(object sender, EventArgs e)
+        {
+            gameWinner = null;
+            if (game.WinnerPlayers.Count == 0 || game.WinnerPlayers.Count >= game.Players.Count) message = "Ничья";
+            else if (game.WinnerPlayers.Count == 1)
+            {
+                var player = ClientManager.Players.Where(a => a.Value.Index == game.WinnerPlayers[0]).First().Value;
+                if (game.PlayerIndex == game.WinnerPlayers[0]) message = "Вы выиграли";
+                else message = $"{player.Name} выиграл";
+
+                gameWinner = player.Color.ToCairoColor(0.7);
+            }
+
+            else
+            {
+                var names = ClientManager.Players.Where(a => game.WinnerPlayers.Contains(a.Value.Index)).Select(a => a.Value.Name);
+                foreach (var item in names.Take(names.Count() - 1))
+                {
+                    message += item + ", ";
+                }
+                message += names.Last() + " выиграли";
+            }
+        }
+
         public GameCore.Interfaces.ClientManager ClientManager { get; private set; }
         public int SelectedPrefabID
         {
@@ -44,7 +99,8 @@ namespace gtk_test
         }
         public double Scale
         {
-            get => scale; set
+            get => scale;
+            set
             {
                 var oldval = scale;
                 scale = value;
@@ -72,6 +128,9 @@ namespace gtk_test
         private Prefab.Rotate _rotate;
         private int _selectedPrefabID;
         private double scale = 1;
+        private Game game;
+        private bool is3D;
+        private int heigthCell;
 
         public Color BackgroundColor
         {
@@ -120,9 +179,11 @@ namespace gtk_test
             drawingArea.Drawn += new DrawnHandler((o, e) =>
             {
                 if (Game == null) return;
+
                 bool test = true;
                 Console.WriteLine($"{Center.X} {Center.Y}");
                 Context gr = e.Cr;
+                drawingArea.CreatePangoContext();
                 gr.Scale(Scale, Scale);
                 gr.Translate(TranslateX, TranslateY);
                 gr.Antialias = Antialias.Subpixel;
@@ -141,7 +202,7 @@ namespace gtk_test
                 //DrawCell(gr, 1, 2, 50, 50, 10, new Color(0, 0, 1, 0.75));
 
                 DrawGrid(gr, 50, 50, Game.Columns, Game.Rows);
-                if (test)
+                if (is3D)
                 {
                     List<(int col, int row, int owner, int dist, Border border, bool selected)> vs = new List<(int, int, int, int, Border, bool)>();
                     Point c = GetPosition(Center);
@@ -166,7 +227,7 @@ namespace gtk_test
                     {
                         System.Drawing.Color color = Game.Players[owner].PlayerCell;
                         Color color1 = new Color(((double)color.R) / 255, ((double)color.G) / 255, ((double)color.B) / 255, 0.65);
-                        DrawCell(gr, col, row, 50, 50, 40, color1, border, selected, ViewRect, Center);
+                        DrawCell(gr, col, row, 50, 50, heigthCell, color1, border, selected, ViewRect, Center);
                     }
                 }
                 else
@@ -182,9 +243,9 @@ namespace gtk_test
                             {
                                 System.Drawing.Color color = Game.Players[p].PlayerCell;
                                 Color color1 = new Color(((double)color.R) / 255, ((double)color.G) / 255, ((double)color.B) / 255, 0.65);
-                                DrawCell(gr, i, j, 50, 50, 14, color1, cell.Border, selected);
+                                DrawCell(gr, i, j, 50, 50, heigthCell, color1, cell.Border, selected);
                                 if (selected)
-                                    DrawEmptySelectedCell(gr, i, j, 50, 50, 12);
+                                    DrawEmptySelectedCell(gr, i, j, 50, 50, heigthCell);
                             }
                             else if (selected)
                             {
@@ -195,6 +256,18 @@ namespace gtk_test
                 }
                 //DrawEmptySelectedCell(gr, 5, 5, 50, 50, 0);
                 //TODO: GameLogic
+
+                gr.Translate(-TranslateX, -TranslateY);
+                var sc = 1 / Scale;
+                gr.Scale(sc, sc);
+                //Pango.Renderer renderer = new Pango.Renderer();
+
+                if (!Game.IsGameEnd)
+                    DrawGameState(gr, drawingArea.Allocation.Size, 0.3, 0.7, message, Game.Players[Game.CurrentPlayer].PlayerCell.ToCairoColor(0.7));
+                else
+                {
+                    DrawGameState(gr, drawingArea.Allocation.Size, 0.3, 0.7, message, gameWinner);
+                }
             });
             drawingArea.MotionNotifyEvent += DrawingArea_MotionNotifyEvent;
             drawingArea.ButtonPressEvent += DrawingArea_ButtonPressEvent;
@@ -406,12 +479,20 @@ namespace gtk_test
             ClientManager = clientManager;
             Game = ClientManager.Game;
             Game.PrefabPlaced += Game_PrefabPlaced;
+            ClientManager.EventChangePlayer += ClientManager_EventChangePlayer;
+            ClientManager_EventChangePlayer(Game.CurrentPlayer);
             ClientManager.EventPlace += ClientManager_EventPlace;
+        }
+
+        private void ClientManager_EventChangePlayer(int obj)
+        {
+            if (Game.PlayerIndex == obj) message = "Ваш ход";
+            else message = $"Ход игрока {ClientManager.Players.Where(a => a.Value.Index == obj).First().Value.Name}";
         }
 
         private void Game_PrefabPlaced(object sender, Game.EventArgsPrefab e)
         {
-            Application.Invoke(new EventHandler((o, e) =>
+            Application.Invoke(new EventHandler((o, _e) =>
             {
                 DrawingArea.QueueDraw();
             }));
@@ -468,6 +549,73 @@ namespace gtk_test
         //    //return true;
         //    return base.OnScrollEvent(evnt);
         //}
+        public static void DrawGameState(Context context, Size size, double aspect, double opacity, string text, Color? cell)
+        {
+            //text = "w";
+            context.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Normal);
+            FontFace ffSans = context.GetContextFontFace();
+            Matrix fm = new Matrix(/*font size*/ 30.0, 0.0, 0.0, /*font size*/ 30.0,
+                                            /*translationX*/ 0.0, /*translationY*/ 0.0);
+            Matrix tm = new Matrix(1, 0.0, 0.0, 1.0, 0.0, 0.0);
+            FontOptions fo = new FontOptions();
+            ScaledFont sfSans = new ScaledFont(ffSans, fm, tm, fo);
+            context.SetScaledFont(sfSans);
+
+            var te = context.TextExtents(text);
+
+
+            double x = (size.Width - te.Width - 20) / 2;
+            double y = size.Height - te.Height - 50;
+            double width = te.Width + 20;
+            double height = 30 + 10;
+            const double degrees = Math.PI / 180;
+            double corner_radius = height / 10;
+            double radius = corner_radius / aspect;
+
+            if (cell.HasValue) width += 50;
+
+
+            context.NewSubPath();
+            context.Arc(x + width - radius, y + radius, radius, -90 * degrees, 0);
+            context.Arc(x + width - radius, y + height - radius, radius, 0 * degrees, 90 * degrees);
+            context.Arc(x + radius, y + height - radius, radius, 90 * degrees, 180 * degrees);
+            context.Arc(x + radius, y + radius, radius, 180 * degrees, 270 * degrees);
+            context.ClosePath();
+
+            context.SetSourceColor(new Color(0.2, 0.2, 0.2, opacity));
+            context.FillPreserve();
+
+            //var layout =
+            //new Pango.Layout(pango_c);
+            //Pango.FontDescription fontDescription = Pango.FontDescription.FromString("Sans Bold 27");
+            //layout.FontDescription = fontDescription;
+            //layout.SetText(text);
+
+
+            context.SetSourceColor(new Color(1, 1, 1, opacity));
+            context.MoveTo(x + 10, y + 30 );
+            context.ShowText(text);
+
+
+            ffSans.Dispose();
+            sfSans.Dispose();
+
+            if (cell.HasValue)
+            {
+                double tx = x + width - 45, ty = y + height - 32;
+                context.Translate(tx, ty);
+                //DrawGrid(context, 40, 40, 1, 1);
+                DrawCell(context, 0, 0, 30, 30, 5, cell.Value, Border.All, false);
+                context.Translate(-tx, -ty);
+            }
+            //Cairo.Glyph[] glyphs;
+            //context.
+            // .ScaledFontTextToGlyphs(sfSans,
+            //    "the self-provided converter: μ-∑-√-‡-€-™", 15, 295, out glyphs);
+            //// Draw the text from converted glyphs.
+            //Cairo.CairoWrapper.ShowGlyphs(context, glyphs);
+            ////context.ShowText("AAA");
+        }
 
         public static void DrawGrid(Context context, int dcolumn, int drow, int columns, int rows)
         {
@@ -825,6 +973,8 @@ namespace gtk_test
         {
             return new Cairo.Point((int)pointD.X / 50, (int)pointD.Y / 50);
         }
+
+
     }
 
     [Flags]
@@ -867,6 +1017,13 @@ namespace gtk_test
 
         public static Gdk.Color ToGdkColor(this System.Drawing.Color color) =>
             new Gdk.Color(color.R, color.G, color.B);
+
+        public static Cairo.Color ToCairoColor(this System.Drawing.Color color) =>
+           new Cairo.Color((double)color.R/256, (double)color.G/256, (double)color.B/256);
+
+        public static Cairo.Color ToCairoColor(this System.Drawing.Color color, double alpha) =>
+          new Cairo.Color((double)color.R / 256, (double)color.G / 256, (double)color.B / 256, alpha);
+
 
         public static System.Drawing.Color ToSystemColor(this Gdk.Color color) =>
             System.Drawing.Color.FromArgb(color.Red/256, color.Green/256, color.Blue/256);

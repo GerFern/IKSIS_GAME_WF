@@ -25,12 +25,12 @@ namespace gtk_test
         static double r = 0.9, g = 0.9, b = 0.9;
         static rgbadd rgb = Program.rgbadd.minrgb;
         //static bool addr, addg, addb, minr, ming, minb;
-        static mw mv;
+        public static mw mv;
         static Widgets.ttt[] ttt;
-        static MainWidget MainWidget;
-        static GameWidget GameWidget;
-        static ConnectWidget ConnectWidget;
-        static RoomWidget RoomWidget;
+        //static MainWidget MainWidget;
+        //static GameWidget GameWidget;
+        //static ConnectWidget ConnectWidget;
+        //static RoomWidget RoomWidget;
         static Cairo.Operator op1;
         static Cairo.Operator op2;
         //static Process GameServer;
@@ -49,10 +49,10 @@ namespace gtk_test
             
             Console.WriteLine("Hello World!");
             Application.Init();
-            GameWidget = new GameWidget();
-            MainWidget = new MainWidget();
-            ConnectWidget = new ConnectWidget();
-            RoomWidget = new RoomWidget();
+            //GameWidget = new GameWidget();
+            //MainWidget = new MainWidget();
+            //ConnectWidget = new ConnectWidget();
+            //RoomWidget = new RoomWidget();
             //ClientManager = new GameCore.Interfaces.ClientManager(new Game());
             //EmptyTest.Proxy.Client<GameCore.Interfaces.IServer, GameCore.Interfaces.ClientManager> client =
             //    new EmptyTest.Proxy.Client<GameCore.Interfaces.IServer, GameCore.Interfaces.ClientManager>(ClientManager, endPoint);
@@ -60,7 +60,7 @@ namespace gtk_test
             //Controller.Client = Client;
             mv = new mw();
             //mv.Drawn += GameWindow_Drawn;
-            ConnectWidget.Connecting += ConnectWidget_Connecting;
+            //ConnectWidget.Connecting += ConnectWidget_Connecting;
 
             //ConnectWidget.Connecting += new EventHandler<EventArgsValue<(System.Net.IPEndPoint EndPoint, string HostName)>>((o, e) =>
             //{
@@ -76,25 +76,25 @@ namespace gtk_test
             //    //}
             //});
 
-            ConnectWidget.Cancel += new EventHandler((o, e) => mv.stack.VisibleChild = MainWidget);
+            //ConnectWidget.Cancel += new EventHandler((o, e) => mv.stack.VisibleChild = MainWidget);
             var asm = System.Reflection.Assembly.GetExecutingAssembly();
             var strs=asm.GetManifestResourceNames();
 
-            MainWidget.ButtonPlay += MainWindow_ButtonPlay;
-            MainWidget.ButtonConnect += MainWindow_ButtonConnect;
-            MainWidget.ButtonCreate += MainWindow_ButtonCreate;
-            MainWidget.ButtonSettings += MainWindow_ButtonSettings;
-            MainWidget.ButtonQuit += MainWindow_ButtonQuit;
+            //MainWidget.ButtonPlay += MainWindow_ButtonPlay;
+            //MainWidget.ButtonConnect += MainWindow_ButtonConnect;
+            //MainWidget.ButtonCreate += MainWindow_ButtonCreate;
+            //MainWidget.ButtonSettings += MainWindow_ButtonSettings;
+            //MainWidget.ButtonQuit += MainWindow_ButtonQuit;
             //Controller.Init();
             //Controller.AddPlayer += new Action<PlayerState>(a =>
             //{
             //         RoomWidget.AddPlayerState(a);
             //});
 
-            mv.stack.Add(MainWidget);
-            mv.stack.Add(ConnectWidget);
-            mv.stack.Add(RoomWidget);
-            mv.stack.Add(GameWidget);
+            //mv.stack.Add(MainWidget);
+            //mv.stack.Add(ConnectWidget);
+            //mv.stack.Add(RoomWidget);
+            //mv.stack.Add(GameWidget);
           
             mv.Destroyed += new EventHandler((o, e) => Application.Quit());
             //GameWindow.ShowAll();
@@ -128,8 +128,10 @@ namespace gtk_test
             //timer.AutoReset = true;
             timer.Elapsed += Timer_Elapsed;
             timer.Start();
+            bool c = true;
+            mv.Destroyed += new EventHandler((o, e) => c = false);
             //Application.Run();
-            while(true)
+            while(c)
             {
                 Application.RunIteration();
             }
@@ -266,98 +268,98 @@ namespace gtk_test
             //Application.Run();
         }
 
-        private static void ConnectWidget_Connecting(object sender, ConnectWidget.EventArgsConnecting e)
-        {
-            Client = e.Client;
-            ClientManager = Client.ClientManager;
-            Game = ClientManager.Game;
+        //private static void ConnectWidget_Connecting(object sender, ConnectWidget.EventArgsConnecting e)
+        //{
+        //    Client = e.Client;
+        //    ClientManager = Client.ClientManager;
+        //    Game = ClientManager.Game;
 
-            //RoomWidget = e.RoomWidget;
-            //mv.stack.Add(e.RoomWidget);
-            RoomWidget.SetClientManager(ClientManager);
-            mv.stack.VisibleChild = RoomWidget;
-            ClientManager.EventGameStarted += ClientManager_EventGameStarted;
-        }
+        //    //RoomWidget = e.RoomWidget;
+        //    //mv.stack.Add(e.RoomWidget);
+        //    //RoomWidget.SetClientManager(ClientManager);
+        //    mv.stack.VisibleChild = RoomWidget;
+        //    ClientManager.EventGameStarted += ClientManager_EventGameStarted;
+        //}
 
-        private static void ClientManager_EventGameStarted()
-        {
-            Application.Invoke(new EventHandler((o, e) =>
-            {
-                GameWidget.Game = Game;
-                GameWidget.GameWidgetOver.SetClientManager(ClientManager);
-                mv.stack.VisibleChild = GameWidget;
-            }));
-        }
+        //private static void ClientManager_EventGameStarted()
+        //{
+        //    Application.Invoke(new EventHandler((o, e) =>
+        //    {
+        //        GameWidget.Game = Game;
+        //        GameWidget.SetClientManager(ClientManager);
+        //        mv.stack.VisibleChild = GameWidget;
+        //    }));
+        //}
 
-        private static void MainWindow_ButtonQuit(object sender, EventArgs e)
-        {
-            mv.Close();
-        }
+        //private static void MainWindow_ButtonQuit(object sender, EventArgs e)
+        //{
+        //    mv.Close();
+        //}
 
-        private static void MainWindow_ButtonSettings(object sender, EventArgs e)
-        {
-            //throw new NotImplementedException();
-        }
+        //private static void MainWindow_ButtonSettings(object sender, EventArgs e)
+        //{
+        //    //throw new NotImplementedException();
+        //}
 
-        [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool CloseHandle(IntPtr hHandle);
+        //[System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+        //static extern bool CloseHandle(IntPtr hHandle);
 
-        [return: MarshalAs(UnmanagedType.Bool)]
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        [DllImport("user32", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern bool CloseWindowStation(IntPtr hWinsta);
+        //[return: MarshalAs(UnmanagedType.Bool)]
+        //[ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
+        //[DllImport("user32", CharSet = CharSet.Unicode, SetLastError = true)]
+        //public static extern bool CloseWindowStation(IntPtr hWinsta);
 
-        private static void MainWindow_ButtonCreate(object sender, EventArgs e)
-        {
-            new Thread(() => GameServer.Program.Main(new string[] { "192.168.0.49", "7979" })) { Name = "GameServerThread"}.Start();
-            //System.Diagnostics.ProcessStartInfo processStartInfo = new System.Diagnostics.ProcessStartInfo("GameServer.exe");
-            ////processStartInfo.RedirectStandardOutput = true;
-            ////processStartInfo.Domain = "aaaaa";
-            //GameServer = System.Diagnostics.Process.Start(processStartInfo);
-            //CloseHandle(p.Handle);
-            //p.WaitForExit();
-        }
+        //private static void MainWindow_ButtonCreate(object sender, EventArgs e)
+        //{
+        //    new Thread(() => GameServer.Program.Main(new string[] { "192.168.0.49", "7979" })) { Name = "GameServerThread"}.Start();
+        //    //System.Diagnostics.ProcessStartInfo processStartInfo = new System.Diagnostics.ProcessStartInfo("GameServer.exe");
+        //    ////processStartInfo.RedirectStandardOutput = true;
+        //    ////processStartInfo.Domain = "aaaaa";
+        //    //GameServer = System.Diagnostics.Process.Start(processStartInfo);
+        //    //CloseHandle(p.Handle);
+        //    //p.WaitForExit();
+        //}
 
-        private static void MainWindow_ButtonConnect(object sender, EventArgs e)
-        {
-            mv.stack.VisibleChild = ConnectWidget;
-        }
+        //private static void MainWindow_ButtonConnect(object sender, EventArgs e)
+        //{
+        //    mv.stack.VisibleChild = ConnectWidget;
+        //}
 
-        private static void MainWindow_ButtonPlay(object sender, EventArgs e)
-        {
-            InitOfflineGame();
-            mv.stack.VisibleChild = GameWidget;
-        }
+        //private static void MainWindow_ButtonPlay(object sender, EventArgs e)
+        //{
+        //    InitOfflineGame();
+        //    mv.stack.VisibleChild = GameWidget;
+        //}
 
-        internal static void InitOfflineGame()
-        {
-            Game = new GameCore.Game();
-            Game.Prefabs.Set(GameCore.Interfaces.ServerManager.standartPrefabLimit);
-            //Game.Prefabs.Add(new System.Drawing.Point(0, 0));
-            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-            //                 new System.Drawing.Point(0, 1));
-            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-            //                 new System.Drawing.Point(0, 1),
-            //                 new System.Drawing.Point(1, 0));
-            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-            //                 new System.Drawing.Point(0, 1),
-            //                 new System.Drawing.Point(1, 0),
-            //                 new System.Drawing.Point(1, 1));
-            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-            //                 new System.Drawing.Point(0, 1),
-            //                 new System.Drawing.Point(0, 2),
-            //                 new System.Drawing.Point(1, 0));
+        //internal static void InitOfflineGame()
+        //{
+        //    Game = new GameCore.Game();
+        //    Game.Prefabs.Set(GameCore.Interfaces.ServerManager.standartPrefabLimit);
+        //    //Game.Prefabs.Add(new System.Drawing.Point(0, 0));
+        //    //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+        //    //                 new System.Drawing.Point(0, 1));
+        //    //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+        //    //                 new System.Drawing.Point(0, 1),
+        //    //                 new System.Drawing.Point(1, 0));
+        //    //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+        //    //                 new System.Drawing.Point(0, 1),
+        //    //                 new System.Drawing.Point(1, 0),
+        //    //                 new System.Drawing.Point(1, 1));
+        //    //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+        //    //                 new System.Drawing.Point(0, 1),
+        //    //                 new System.Drawing.Point(0, 2),
+        //    //                 new System.Drawing.Point(1, 0));
 
-            System.Drawing.Color blue = System.Drawing.Color.FromArgb(64, 128, 255);
-            System.Drawing.Color red = System.Drawing.Color.FromArgb(192, 32, 32);
-            //System.Drawing.Color green = System.Drawing.Color.FromArgb(32, 192, 32);
-            Game.Players.Add(1, blue);
-            Game.Players.Add(2, red);
-            //Game.Players.Add(3, green);
-            Game.CurrentPlayer = 1;
-            Game.Start(15, 15);
-            GameWidget.Game = Game;
-        }
+        //    System.Drawing.Color blue = System.Drawing.Color.FromArgb(64, 128, 255);
+        //    System.Drawing.Color red = System.Drawing.Color.FromArgb(192, 32, 32);
+        //    //System.Drawing.Color green = System.Drawing.Color.FromArgb(32, 192, 32);
+        //    Game.Players.Add(1, blue);
+        //    Game.Players.Add(2, red);
+        //    //Game.Players.Add(3, green);
+        //    Game.CurrentPlayer = 1;
+        //    Game.Start(15, 15);
+        //    GameWidget.Game = Game;
+        //}
 
         enum rgbadd
         {
@@ -492,8 +494,8 @@ namespace gtk_test
             //if (b > max) b = max;
             //else if (b < min) b = min;
             back = new Cairo.Color(r, g, b, 0.999);
-            Application.Invoke(new EventHandler((o,e)=>
-            mv.QueueDraw()));
+            //Application.Invoke(new EventHandler((o,_e)=>
+            //mv.QueueDraw()));
 
             t.Start();
         }
@@ -521,15 +523,15 @@ namespace gtk_test
             
         }
 
-        private static void T_BtnClicked(object sender, Widgets.ttt.EventArgsInt e)
-        {
-            //var st =(StackTransitionType)(new Random().Next() % 20);
-            var st = StackTransitionType.SlideLeftRight;
-            mv.stack.TransitionType = st;
-           System.Console.WriteLine(st);
-               mv.stack.VisibleChild = ttt[e.Value];
+        //private static void T_BtnClicked(object sender, Widgets.ttt.EventArgsInt e)
+        //{
+        //    //var st =(StackTransitionType)(new Random().Next() % 20);
+        //    var st = StackTransitionType.SlideLeftRight;
+        //    mv.stack.TransitionType = st;
+        //   System.Console.WriteLine(st);
+        //       mv.stack.VisibleChild = ttt[e.Value];
            
-        }
+        //}
 
 
     }

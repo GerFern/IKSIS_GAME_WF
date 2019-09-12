@@ -30,6 +30,14 @@ namespace gtk_test.Widgets
             _playerName.Text = playerState.Name;
             if (!readOnlyState)
             {
+
+                _color.Sensitive = true;
+                _ready.Sensitive = true;
+                //_color.AddEvents((int)Gdk.EventMask.AllEventsMask);
+                //_ready.AddEvents((int)Gdk.EventMask.AllEventsMask);
+
+                //_color.AddEvents((int)(Gdk.EventMask.ExposureMask | Gdk.EventMask.EnterNotifyMask | Gdk.EventMask.ButtonPressMask | Gdk.EventMask.ButtonReleaseMask | Gdk.EventMask.FocusChangeMask));
+                //_ready.AddEvents((int)(Gdk.EventMask.ExposureMask | Gdk.EventMask.EnterNotifyMask | Gdk.EventMask.ButtonPressMask | Gdk.EventMask.ButtonReleaseMask | Gdk.EventMask.FocusChangeMask));
                 _color.ColorSet += new EventHandler((o, e) =>
                 {
                     if (!toogleState)

@@ -38,6 +38,7 @@ namespace GameCore.Interfaces
         [WaitResponse]
         Dictionary<int, PlayerState> Players { get; }
         void Message(string text);
+        void GiveUp();
 
     }
 

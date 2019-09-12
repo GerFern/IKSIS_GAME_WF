@@ -15,7 +15,19 @@ namespace GameCore.Interfaces
         public string Name { get; set; }
         public int Index { get; set; }
         public int ID { get; set; }
+        public int Count { get; set; }
+        public State State { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
+    }
+
+    public enum State:byte
+    {
+        [Description("В игре")]
+        InGame,
+        //[Description("Ход")]
+        //Hode,
+        [Description("Сдался")]
+        GiveUp,
     }
 }

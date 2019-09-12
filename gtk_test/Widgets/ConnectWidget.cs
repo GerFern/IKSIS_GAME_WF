@@ -11,6 +11,7 @@ namespace gtk_test.Widgets
 {
     public class ConnectWidget: Widget
     {
+        [UI] private Entry _cvEnterName = null;
         [UI] private Entry _cvEnterIP = null;
         [UI] private Entry _cvEnterPort = null;
         [UI] private Button _cvAccept = null;
@@ -24,7 +25,7 @@ namespace gtk_test.Widgets
               {
                   try
                   {
-                      string sHost = _cvEnterIP.Text, sPort = _cvEnterPort.Text;
+                      string sHost = _cvEnterIP.Text, sPort = _cvEnterPort.Text, sName = _cvEnterName.Text;
                       if (int.TryParse(sPort, out int port))
                       {
                           IPAddress iPAddress;
@@ -34,10 +35,10 @@ namespace gtk_test.Widgets
                               iPAddress = iPHostEntry.AddressList[0];
                           }
                           IPEndPoint iPEndPoint = new IPEndPoint(iPAddress, port);
-                          ClientManager clientManager = new ClientManager(new GameCore.Game(), "A");
+                          ClientManager clientManager = new ClientManager(new GameCore.Game());
                           Client<IServer, ClientManager> client = new Client<IServer, ClientManager>(clientManager, iPEndPoint);
-                          clientManager.SetServer(client.Server);
-                          Connecting?.Invoke(this, new EventArgsConnecting(iPEndPoint, client));
+                          clientManager.SetServer(client.Server, sName);
+                          Connecting?.Invoke(this, new EventArgsConnecting(iPEndPoint, client, sName));
                       }
                       else
                       {
@@ -67,14 +68,21 @@ namespace gtk_test.Widgets
 
         public class EventArgsConnecting:EventArgs
         {
-            public EventArgsConnecting(EndPoint endPoint,  Client<IServer, ClientManager> client)
+            public EventArgsConnecting(EndPoint endPoint,  Client<IServer, ClientManager> client, string userName)
             {
+                if (string.IsNullOrWhiteSpace(userName))
+                {
+                    throw new ArgumentException("message", nameof(userName));
+                }
+
                 EndPoint = endPoint ?? throw new ArgumentNullException(nameof(endPoint));
                 Client = client ?? throw new ArgumentNullException(nameof(client));
+                UserName = userName;
             }
 
             public EndPoint EndPoint { get; }
             public Client<IServer, ClientManager> Client { get; }
+            public string UserName { get; }
         }
     }
 }

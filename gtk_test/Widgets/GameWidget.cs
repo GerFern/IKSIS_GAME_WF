@@ -1,20 +1,63 @@
 ﻿using System;
+using System.Collections.Generic;
 using GameCore;
+using GameCore.Interfaces;
 using Gtk;
+using Game = GameCore.Game;
 using UI = Gtk.Builder.ObjectAttribute;
 
 namespace gtk_test.Widgets
 {
     class GameWidget : Widget
     {
-        [UI]
-        private DrawingArea _gameWidget = null;
-        [UI]
-        private Box _vBox = null;
-        [UI]
-        private Scale _scale = null;
+        [UI] private DrawingArea _gameWidget = null;
+        [UI] private Box _vBox = null;
+        [UI] private Scale _scale = null;
+
+        [UI] private Box _players = null;
+        [UI] private Button _btnGiveUp = null;
 
         public GameWidgetOver GameWidgetOver { get; private set; }
+        public ClientManager ClientManager { get; private set; }
+
+        public void SetClientManager(GameCore.Interfaces.ClientManager clientManager)
+        {
+            ClientManager = clientManager;
+            GameWidgetOver.SetClientManager(clientManager);
+            foreach (var item in clientManager.Players)
+            {
+                var gps = new GamePlayerState(item.Value);
+                playerStates.Add(item.Key, gps);
+                _players.Add(gps);
+                gps.Visible = true;
+            }
+        }
+
+        private void _btnGiveUp_ButtonPressEvent(object o, ButtonPressEventArgs args)
+        {
+            var dialog = new Dialog("Закончить игру?", Program.mv, DialogFlags.Modal);
+            dialog.AddButton("Да", ResponseType.Yes).ButtonReleaseEvent += new ButtonReleaseEventHandler((obj, e) =>
+             {
+                 if (ClientManager == null)
+                 {
+                     Game.GiveUpPlayer(Game.CurrentPlayer);
+                 }
+                 else
+                 {
+                     ClientManager.Server.GiveUp();
+                 }
+                 dialog.Destroy();
+             });
+            dialog.AddButton("Нет", ResponseType.No).ButtonReleaseEvent += new ButtonReleaseEventHandler((obj, e) =>
+            {
+                dialog.Destroy();
+            });
+            //dialog.ShowNow();
+            var t = dialog.Run();
+            System.Diagnostics.Debug.WriteLine(t);
+        }
+
+        Dictionary<int, GamePlayerState> playerStates = new Dictionary<int, GamePlayerState>();
         private int _counter;
 
         private GameCore.Game game;
@@ -53,22 +96,27 @@ namespace gtk_test.Widgets
             }
         }
 
-        public GameWidget() : this(new Builder("GameWindow.glade")) { }
+        public GameWidget() : this(new Builder("GameWindow.glade"))
+        {
+            _btnGiveUp.ButtonPressEvent += _btnGiveUp_ButtonPressEvent;
+
+            DeleteEvent += Window_DeleteEvent;
+
+            KeyPressEvent += GameWindow_KeyPressEvent;
+            KeyReleaseEvent += GameWindow_KeyReleaseEvent;
+            //_button1.Clicked += Button1_Clicked;
+            GameWidgetOver = new GameWidgetOver(_gameWidget);
+            GameWidgetOver.ScaleChanged += GameWidget_ScaleChanged;
+            _scale.ChangeValue += _scale_ChangeValue;
+            //CssProvider cssProvider = new CssProvider();
+            //cssProvider.LoadFromResource("Css/test.css");
+            //this.StyleContext.AddProvider(cssProvider, 800);
+        }
 
         public GameWidget(Builder builder) : base(builder.GetObject(typeof(GameWidget).Name).Handle)
         {
             builder.Autoconnect(this);
-            DeleteEvent += Window_DeleteEvent;
-            KeyPressEvent += GameWindow_KeyPressEvent;
-            KeyReleaseEvent += GameWindow_KeyReleaseEvent;
-            //_button1.Clicked += Button1_Clicked;
             builder.Dispose();
-            GameWidgetOver = new GameWidgetOver(_gameWidget);
-            GameWidgetOver.ScaleChanged += GameWidget_ScaleChanged;
-            _scale.ChangeValue += _scale_ChangeValue;
-            CssProvider cssProvider = new CssProvider();
-            cssProvider.LoadFromResource("Css/test.css");
-            this.StyleContext.AddProvider(cssProvider, 800);
         }
 
         private void _scale_ChangeValue(object o, ChangeValueArgs args)

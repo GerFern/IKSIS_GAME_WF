@@ -7,13 +7,13 @@ namespace GameCore.Interfaces
 {
     public interface ClientContainer
     {
-        public Guid guid { get; set; }
-        public string name { get; set; }
+        Guid guid { get; set; }
+        string name { get; set; }
     }
 
     public interface PlayerStateLocal
     {
-        public Color color { get; set; }
-        public bool ready { get; set; }
+        Color color { get; set; }
+        bool ready { get; set; }
     }
 }

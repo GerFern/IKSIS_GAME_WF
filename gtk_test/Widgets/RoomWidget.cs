@@ -116,7 +116,10 @@ namespace gtk_test.Widgets
 
         private void ClientManager_EventPlayerExit(int obj)
         {
-            RemovePlayerState(PlayerStateWidgets[obj]);
+            Application.Invoke(new EventHandler((o, e)=>
+            {
+                RemovePlayerState(PlayerStateWidgets[obj]);
+            }));
         }
 
      
@@ -133,7 +136,11 @@ namespace gtk_test.Widgets
 
         private void ClientManager_EventNewPlayer(PlayerState obj)
         {
-            AddPlayerState(obj, true);
+            Application.Invoke(new EventHandler((o,e)=>
+            {
+                AddPlayerState(obj, true);
+            }));
+
         }
 
         public RoomWidget() : this(new Builder("GameWindow.glade"))

@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <ApplicationIcon />
-    <StartupObject />
+    <StartupObject>gtk_test.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +28,14 @@
     <ProjectReference Include="..\GameServer\GameServer.csproj">
       <Private>true</Private>
     </ProjectReference>
-    <ProjectReference Include="C:\Users\Home\source\repos\NodeTest\EmptyTest\EmptyTest.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="server.cmd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="launch.cmd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

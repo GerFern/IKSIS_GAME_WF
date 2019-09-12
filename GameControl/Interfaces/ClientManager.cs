@@ -22,23 +22,28 @@ namespace GameCore.Interfaces
             }
         }
         public GameCore.Game Game { get; }
-        public string UserName { get; }
-        public ClientManager(GameCore.Game game, string userName)
+        public ClientManager(GameCore.Game game)
         {
             Game = game ?? throw new ArgumentNullException(nameof(game));
-            UserName = userName ?? throw new ArgumentNullException(nameof(userName));
             //Server = server ?? throw new ArgumentNullException(nameof(server));
         }
 
         Action<int, PlayerState> add;
         Action<int> remove;
         Action clear;
+        public string UserName { get; private set; }
 
-        public void SetServer(IServer server)
+        public void SetServer(IServer server, string userName)
         {
+            if (string.IsNullOrWhiteSpace(userName))
+            {
+                throw new ArgumentException("message", nameof(userName));
+            }
+            UserName = userName;
+
             Server = server;
             players = new EmptyTest.PrivateDictionary<int, PlayerState>(server.Players,out add, out remove, out clear);
-            PlayerState = server.LogIn(UserName);
+            PlayerState = server.LogIn(userName);
         }
 
         #region InterfaceRealization
@@ -46,6 +51,7 @@ namespace GameCore.Interfaces
         public void ChangePlayer(int playerIndex)
         {
             Game.CurrentPlayer = playerIndex;
+            EventChangePlayer?.Invoke(playerIndex);
         }
 
         //public void GameStart(Game game, Dictionary<int, (int index, Color color)> players)
@@ -67,7 +73,17 @@ namespace GameCore.Interfaces
 
         public void Place(int playerID, int prefabID, Point location, GameCore.Prefab.Rotate rotate)
         {
-            Game.SetPrefab(prefabID, rotate, location, out _, Players[playerID].Index , false, true);
+            PlayerState playerState = Players[playerID];
+
+            int playerIndex = playerState.Index;
+
+            Game.SetPrefab(prefabID, rotate, location, out _, playerIndex, false, true);
+
+            playerState.Count = Game.GetPlayerCount(playerIndex);
+            //System.Threading.Thread.Sleep(10);
+            //playerState.State = State.InGame;
+            //playerState = Players.Where(a => a.Value.Index == Game.CurrentPlayer).First().Value;
+            //playerState.State = State.Hode;
         }
 
         public void PlayerExit(int playerID)
@@ -120,9 +136,14 @@ namespace GameCore.Interfaces
             Game.Players.Set(ps);
             Game.StartMultiplayer(gameSize, players[this.PlayerState.ID].index);
             EventGameStarted?.Invoke();
+            //Players.Where(a => a.Value.Index == Game.CurrentPlayer).First().Value.State = State.Hode;
         }
 
-      
+        public void GiveUpPlayer(int playerIndex)
+        {
+            Players.Where(a => a.Value.Index == playerIndex).First().Value.State = State.GiveUp;
+            Game.GiveUpPlayer(playerIndex);
+        }
 
 
 

@@ -15,7 +15,7 @@
   </ItemGroup>
  
   <ItemGroup>
-    <ProjectReference Include="C:\Users\Home\source\repos\NodeTest\EmptyTest\EmptyTest.csproj" />
+    <ProjectReference Include="..\..\repos\NodeTest\EmptyTest\EmptyTest.csproj" />
   </ItemGroup>
  
 </Project>
