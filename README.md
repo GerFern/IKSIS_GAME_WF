@@ -1,0 +1,3 @@
+# IKSIS_GAME_WF
+This is my courswork project. This work was done in a hurry and not completely, since I was long past the deadline and I could have been kicked out of the institute if I had not passed what I have. Initially I did for Windows Forms, but then I wanted to port to GTK# with .net core.
+This course work is a network analogue of the "Битва стратегов" board game, which I bought from "Fix Price". I wrote a small network engine to send packets in the form of class objects that can notify the client/server about their properties change, and also call methods and return the result over client/server.
