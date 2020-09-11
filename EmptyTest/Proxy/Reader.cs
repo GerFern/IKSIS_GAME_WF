@@ -1,6 +1,8 @@
-﻿using System;
+﻿using EmptyTest.BinaryWriterExtensions;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
@@ -12,11 +14,12 @@ namespace EmptyTest.Proxy
     {
         BinaryFormatter formatter = new BinaryFormatter();
 
+
         Thread thread;
         ConcurrentDictionary<int, ValueWaiter> dictWaiters = new ConcurrentDictionary<int, ValueWaiter>();
         
         object listLocker = new object();
-        BinaryReaderE reader;
+        BinaryReader reader;
         public object GetValue(int id)
         {
             ValueWaiter waiter = CreateOrGetWaiter(id);
@@ -34,7 +37,7 @@ namespace EmptyTest.Proxy
             }
         }
 
-        public Reader(BinaryReaderE reader)
+        public Reader(BinaryReader reader)
         {
             this.reader = reader;
             //thread = new Thread(Listener) { Name = "ClientResultWaiter" };
@@ -70,7 +73,7 @@ namespace EmptyTest.Proxy
         }
         public void Read()
         {
-            lock(reader.locked)
+            lock(reader)
             {
                 var msg = reader.ReadEnum<MessageType>();
                 switch (msg)

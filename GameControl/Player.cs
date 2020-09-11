@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 
 namespace GameCore
@@ -10,7 +11,11 @@ namespace GameCore
         /// <summary>
         /// Key - prefabID, Value - CountAllow (-1 is infinity)
         /// </summary>
-        public Dictionary<int, int> PrefabCountAllow { get; } = new Dictionary<int, int>();
+        //public Dictionary<int, int> PrefabCountAllow { get; } = new Dictionary<int, int>();
+
+        public PrefabLimitNotifier PrefabLimitNotifier { get; internal set; }
+
+        public IReadOnlyDictionary<int, int> PrefabCountAllow => PrefabLimitNotifier.Prefabs;
 
         //public Player(PlayerCellBase playerCell)
         //{

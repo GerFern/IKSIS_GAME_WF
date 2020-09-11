@@ -24,7 +24,7 @@ namespace gtk_test.Widgets
         /// <summary> Quit </summary>
         [UI] public Button _mvButton5;
 
-        public event EventHandler ButtonPlay;
+        //public event EventHandler ButtonPlay;
         public event EventHandler ButtonConnect;
         public event EventHandler ButtonCreate;
         public event EventHandler ButtonSettings;
@@ -35,14 +35,11 @@ namespace gtk_test.Widgets
         private MainWidget(Builder builder) : base(builder.GetObject(typeof(MainWidget).Name).Handle)
         {
             builder.Autoconnect(this);
-            _mvButton1.Clicked += new EventHandler((o, e) => ButtonPlay?.Invoke(this, e));
+            //_mvButton1.Clicked += new EventHandler((o, e) => ButtonPlay?.Invoke(this, e));
             _mvButton2.Clicked += new EventHandler((o, e) => ButtonConnect?.Invoke(this, e));
             _mvButton3.Clicked += new EventHandler((o, e) => ButtonCreate?.Invoke(this, e));
             _mvButton4.Clicked += new EventHandler((o, e) => ButtonSettings?.Invoke(this, e));
             _mvButton5.Clicked += new EventHandler((o, e) => ButtonQuit?.Invoke(this, e));
-            //DeleteEvent += Window_DeleteEvent;
-            //_button1.Clicked += Button1_Clicked;
-            //builder.Dispose();
         }
 
 

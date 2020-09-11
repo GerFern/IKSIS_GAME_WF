@@ -25,14 +25,11 @@ namespace GameCore.Interfaces
         public ClientManager(GameCore.Game game)
         {
             Game = game ?? throw new ArgumentNullException(nameof(game));
-            //Server = server ?? throw new ArgumentNullException(nameof(server));
         }
-
         Action<int, PlayerState> add;
         Action<int> remove;
         Action clear;
         public string UserName { get; private set; }
-
         public void SetServer(IServer server, string userName)
         {
             if (string.IsNullOrWhiteSpace(userName))
@@ -40,89 +37,62 @@ namespace GameCore.Interfaces
                 throw new ArgumentException("message", nameof(userName));
             }
             UserName = userName;
-
             Server = server;
             players = new EmptyTest.PrivateDictionary<int, PlayerState>(server.Players,out add, out remove, out clear);
             PlayerState = server.LogIn(userName);
         }
 
         #region InterfaceRealization
-
         public void ChangePlayer(int playerIndex)
         {
             Game.CurrentPlayer = playerIndex;
             EventChangePlayer?.Invoke(playerIndex);
         }
-
-        //public void GameStart(Game game, Dictionary<int, (int index, Color color)> players)
-        //{
-        //    var arr = game.grid;
-        //    //Game.Start()
-        //}
-
         public void NewPlayer(PlayerState playerState)
         {
             lock (locker)
             {
                 add(playerState.ID, playerState);
             }
-            //Players[playerState.ID] = playerState;
             EventNewPlayer?.Invoke(playerState);
-
         }
-
         public void Place(int playerID, int prefabID, Point location, GameCore.Prefab.Rotate rotate)
         {
             PlayerState playerState = Players[playerID];
-
             int playerIndex = playerState.Index;
-
             Game.SetPrefab(prefabID, rotate, location, out _, playerIndex, false, true);
-
             playerState.Count = Game.GetPlayerCount(playerIndex);
-            //System.Threading.Thread.Sleep(10);
-            //playerState.State = State.InGame;
-            //playerState = Players.Where(a => a.Value.Index == Game.CurrentPlayer).First().Value;
-            //playerState.State = State.Hode;
         }
-
         public void PlayerExit(int playerID)
         {
             lock(locker)
             {
                 remove(playerID);
             }
-
             EventPlayerExit?.Invoke(playerID);
         }
-
         public void PlayerReadyChange(bool isReady, int playerID)
         {
             players[playerID].Ready = isReady;
             EventPlayerReadyChange?.Invoke(isReady, playerID);
         }
-
         public void Message(int playerID, string text)
         {
             EventMessage?.Invoke(playerID, text);
         }
-
         public void ReadyTimer(int time)
         {
             EventReadyTimer?.Invoke(time);
         }
-
         public void ServerMessage(string text)
         {
             EventServerMessage?.Invoke(text);
         }
-
         public void PlayerColorChange(Color color, int playerID)
         {
             players[playerID].Color = color;
             EventPlayerColorChange?.Invoke(color, playerID);
         }
-
         public void GameStart(Size gameSize, IDictionary<int, PrefabLimit> prefabs, IDictionary<int, (int index, Color color)> players)
         {
             Game.Prefabs.Set(prefabs);
@@ -136,21 +106,13 @@ namespace GameCore.Interfaces
             Game.Players.Set(ps);
             Game.StartMultiplayer(gameSize, players[this.PlayerState.ID].index);
             EventGameStarted?.Invoke();
-            //Players.Where(a => a.Value.Index == Game.CurrentPlayer).First().Value.State = State.Hode;
         }
-
         public void GiveUpPlayer(int playerIndex)
         {
             Players.Where(a => a.Value.Index == playerIndex).First().Value.State = State.GiveUp;
             Game.GiveUpPlayer(playerIndex);
         }
-
-
-
-
-
         #endregion
-
         #region Events
         public event Action<int> EventChangePlayer;
         public event Action<bool, int> EventPlayerReadyChange;
@@ -160,12 +122,9 @@ namespace GameCore.Interfaces
         public event Action<int, int, Point, GameCore.Prefab.Rotate> EventPlace;
         public event Action<int> EventPlayerExit;
         public event Action<bool, int> EventReadyChange;
-        //public event Action<int> EventSetIndex;
         public event Action<int, string> EventMessage;
         public event Action<string> EventServerMessage;
         public event Action<int> EventReadyTimer;
         #endregion
     }
-
-
 }

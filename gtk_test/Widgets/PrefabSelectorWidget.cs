@@ -16,14 +16,12 @@ namespace gtk_test.Widgets
         private Color foreColor;
         private Color backgroundColor;
         public GameWidgetOver GameWidget { get; set; }
-
+        public int Count { get; set; }
         public Prefab Prefab
+
         {
             get => prefab;
-            set
-            {
-                prefab = value;
-            }
+            set => prefab = value;
         }
 
         public Color ForeColor { get => foreColor; set => foreColor = value; }
@@ -52,22 +50,42 @@ namespace gtk_test.Widgets
 
         private void PrefabSelectorWidget_Drawn(object o, DrawnArgs args)
         {
-            if (Prefab != null)
+            if (prefab != null)
             {
+                const int DSize = 30;
                 Context context = args.Cr;
                 context.Translate(20, 20);
                 context.LineCap = LineCap.Round;
                 context.LineWidth = 4;
-                context.Rectangle(new Rectangle(0, 0, Prefab.Size.Width * 50, prefab.Size.Height * 50));
-                context.Color = backgroundColor;
+                context.Rectangle(new Rectangle(0, 0, prefab.Size.Width * DSize, prefab.Size.Height * DSize));
+                context.SetSourceColor(backgroundColor);
                 context.Fill();
-                context.Color = new Color(0, 0, 0, 1);
-                GameWidgetOver.DrawGrid(context, 50, 50, Prefab.Size.Width, Prefab.Size.Height);
+                context.SetSourceColor(new Color(0, 0, 0, 1));
+                GameWidgetOver.DrawGrid(context, DSize, DSize, prefab.Size.Width, prefab.Size.Height);
                 context.LineWidth = 6;
-                foreach (var item in Prefab.Points)
+                foreach (var item in prefab.Points)
                 {
-                    GameWidgetOver.DrawCell(context, item.Point.X, item.Point.Y, 50, 50, 10, foreColor, GameCore.Border.None, false);
+                    GameWidgetOver.DrawCell(context, item.Point.X, item.Point.Y, DSize, DSize, 6, foreColor, GameCore.Border.None, false);
                 }
+
+                string text = Count.ToString();
+                context.SelectFontFace("Sans", FontSlant.Normal, FontWeight.Normal);
+                FontFace ffSans = context.GetContextFontFace();
+                Matrix fm = new Matrix(/*font size*/ 30.0, 0.0, 0.0, /*font size*/ 30.0,
+                                                /*translationX*/ 0.0, /*translationY*/ 0.0);
+                Matrix tm = new Matrix(1, 0.0, 0.0, 1.0, 0.0, 0.0);
+                FontOptions fo = new FontOptions();
+                ScaledFont sfSans = new ScaledFont(ffSans, fm, tm, fo);
+                context.SetScaledFont(sfSans);
+
+                var te = context.TextExtents(text);
+                var size = this.Allocation.Size;
+                double x = size.Width - te.Width - 40;
+                double y = size.Height - te.Height - 10;
+                context.SetSourceColor(new Color(0.4, 0.8, 0.6, 1));
+                context.MoveTo(x, y);
+                context.ShowText(text);
+
             }
         }
 

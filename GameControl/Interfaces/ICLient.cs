@@ -18,11 +18,5 @@ namespace GameCore.Interfaces
         void ReadyTimer(int time);
         void ServerMessage(string text);
         void GiveUpPlayer(int playerIndex);
-        //void GameSizeChange(Size size);
-        ////void AddPrefabLimit(int id, PrefabLimit prefabLimit);
-        //void UpdatePrefabLimit(int prefabID, PrefabLimit prefabLimit);
-        //void SetPrefabLimits(PrefabLimit[] prefabLimits);
     }
-
-
 }

@@ -33,35 +33,17 @@ namespace GameCore.Interfaces
                 { 16, new PrefabLimit(5, new Point(0,0), new Point(0,1), new Point(0,2), new Point(1,2), new Point(2,2),
                                          new Point(2,1), new Point(2,0), new Point(1,0)) },
             });
-
-
-
-
-
         Thread startGameTimer;
         Server<ServerManager, IClient, ClientData> Server { get; set; }
         IReadOnlyDictionary<int, ClientInfo<IClient, ClientData>> ClientInfoCollection => Server.Clients;
         IClient[] Clients => ClientInfoCollection.Select(a => a.Value.ClientInterface).ToArray();
-        //Size GameSizeStart
-        //{
-        //    get => gameSizeStart;
-        //    set
-        //    {
-        //        gameSizeStart = value;
-        //        ForEachClient(a => a.GameSizeChange(value));
-        //    }
-        //}
         Dictionary<int, PrefabLimit> prefabLimitDict = new Dictionary<int, PrefabLimit>();
         static readonly Random random = new Random();
         bool startingTimer = false;
         bool breakTimer = false;
         GameCore.Game gameController;
-
-
-        public ServerManager(/*Server<ServerManager, IClient, ClientData> server, */GameCore.Game game)
+        public ServerManager(GameCore.Game game)
         {
-            //Server = server ?? throw new ArgumentNullException(nameof(server));
-            //EmptyTest.PrivateDictionary<int, ClientInfo<IClient, ClientData>> s = server.Clients;
             gameController = game ?? throw new ArgumentNullException(nameof(game));
             game.Started += new EventHandler((o, e) =>
             {
@@ -81,7 +63,6 @@ namespace GameCore.Interfaces
                 ForEachClient(a => a.ChangePlayer(game.CurrentPlayer));
             });
         }
-
         public void SetServer(Server<ServerManager, IClient, ClientData> server)
         {
             if (Server != null)
@@ -89,12 +70,10 @@ namespace GameCore.Interfaces
             Server = server ?? throw new ArgumentNullException(nameof(server));
             Server.ClientDisconnect += Server_ClientDisconnect;
         }
-
         private void Server_ClientDisconnect(object sender, ClientExceptionArgs<IClient, ClientData> e)
         {
             ForEachClient(a => a.PlayerExit(e.ClientInfo.UID));
         }
-
         void CheckAllReady()
         {
             if (players.Count >= 2 && players.All(a => a.Value.Ready))
@@ -114,8 +93,6 @@ namespace GameCore.Interfaces
                     startingTimer = false;
                     Thread.Sleep(150);
                     new Thread(StartGame) { Name = "StartGame" }.Start();
-                    //new Thread(() => ForEachClientOnThread(a => a.ReadyTimer(0))).Start();
-
                 })
                 { Name = "StartGameTimer"};
                 startGameTimer.Start();
@@ -126,7 +103,6 @@ namespace GameCore.Interfaces
                 startGameTimer = null;
             }
         }
-
         int GetPlayerID()
         {
             int id;
@@ -143,34 +119,25 @@ namespace GameCore.Interfaces
         bool isGameRunning;
         private Size gameSizeStart;
         readonly Dictionary<int, PlayerState> players = new Dictionary<int, PlayerState>();
-        //readonly Dictionary<IClient, PlayerState> dictClientPlayerState = new Dictionary<IClient, PlayerState>();
-
         void ForEachClient(Action<IClient> action)
         {
             foreach (var item in ClientInfoCollection.Values)
             {
-
                 new Thread(() =>
                 {
                     try
                     {
                         action.Invoke(item.ClientInterface);
                     }
-                    catch (Exception ex)
-                    {
-
-                    }
+                    catch (Exception) { }
                 }){ Name = $"ActionPlayer_{item.Data.name}({item.UID}_" }.Start();
             }
         }
-
         void StartGame()
         {
             int index = 1;
             foreach (var item in players.Shuffle())
-            {
                 item.Value.Index = index++;
-            }
             int size = 5 + (players.Count * random.Next(4, 6));
             gameSizeStart = new Size(size + random.Next(-5, 5), size + random.Next(-5, 5));
             gameController = new GameCore.Game();
@@ -182,9 +149,7 @@ namespace GameCore.Interfaces
             ForEachClient(a => a.GameStart(gameSizeStart, standartPrefabLimit, players.ToDictionary(b => b.Key, c => (c.Value.Index, c.Value.Color))));
             Console.WriteLine("GameStarted");
             isGameRunning = true;
-            //TODO start game
         }
-
         #region InterfaceRealization
         public bool IsReady
         {
@@ -206,9 +171,6 @@ namespace GameCore.Interfaces
                 }
             }
         }
-
-      
-
         public Game Game { get; }
         public bool IsGameRunning { get => isGameRunning; }
         public Dictionary<int, PlayerState> Players { get => players; }
@@ -223,11 +185,8 @@ namespace GameCore.Interfaces
                 a.PlayerColorChange(value, id));
             }
         }
-
         public PlayerState LogIn(string Name)
         {
-            //PlayerState playerState;
-            //ClientData.logIn = true;
             var clientInfo = ClientInfo;
             var data = clientInfo.Data;
             if (!data.logIn)
@@ -245,30 +204,13 @@ namespace GameCore.Interfaces
                 Console.WriteLine($"NewPlayer {Name}");
             }
             return data.playerState;
-
-            //if (!dictClientPlayerState.TryGetValue(Client, out playerState))
-            //{
-            //    playerState = new PlayerState
-            //    {
-            //        ID = GetPlayerID(),
-            //        name = Name,
-            //        ready = false,
-            //        color = Color.FromArgb(random.Next(255), random.Next(255), random.Next(255))
-            //    };
-            //    ForEachClientOnThread(a => a.NewPlayer(playerState));
-            //    players.Add(playerState.ID, playerState);
-            //    dictClientPlayerState.Add(Client, playerState);
-            //}
-            //return playerState.ID;
         }
-
         public bool Place(int prefabID, Point location, GameCore.Prefab.Rotate rotate)
         {
             var player = Player;
             bool valid = gameController.SetPrefab(prefabID, rotate, location, out _, player: player.Index, validate: true, decrement: true);
             if (valid)
             {
-                //ForEachClientOnThread(a => a.Place(player.ID, prefabID, location, rotate));
                 ForEachClient(a =>
                 {
                     a.Place(player.ID, prefabID, location, rotate);
@@ -277,14 +219,11 @@ namespace GameCore.Interfaces
                 return true;
             }
             else return false;
-            //throw new NotImplementedException();
         }
-
         public void Message(string text)
         {
             ForEachClient(a => a.Message(Player.ID, text));
         }
-
         public void GiveUp()
         {
             if(isGameRunning)
@@ -302,37 +241,6 @@ namespace GameCore.Interfaces
                     });
             }
         }
-
-        //public void SetGameSize(Size size)
-        //{
-        //    if (!isGameRunning && ClientData.mainInLobby)
-        //    {
-        //        GameSizeStart = size;
-        //    }
-        //}
-
-        //public void SetPrefabLimits(PrefabLimit[] prefabLimits)
-        //{
-        //    ForEachClient(a => a.SetPrefabLimits(prefabLimits));
-        //}
-
-        //public void SetStandartPrefabLimit()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public void AddPrefabLimit(PrefabLimit prefabLimit)
-        //{
-        //    //ForEachClient(a => a.AddPrefabLimit(prefabLimit));
-        //}
-
-        //public void UpdatePrefabLimit(int prefabID, PrefabLimit prefabLimit)
-        //{
-        //    ForEachClient(a => a.UpdatePrefabLimit(prefabID, prefabLimit));
-        //}
-
         #endregion
     }
-
-
 }

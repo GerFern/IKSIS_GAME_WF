@@ -1,9 +1,9 @@
-﻿using EmptyTest.TStreamHandler;
+﻿using CSCore.TStreamHandler;
 using System;
 using System.Net;
 using System.Timers;
 
-namespace EmptyTest
+namespace CSCore
 {
     public class Data
     {

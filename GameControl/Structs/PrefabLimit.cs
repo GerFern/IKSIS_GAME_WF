@@ -6,7 +6,7 @@ using System.Text;
 namespace GameCore.Interfaces
 {
     [Serializable]
-    public struct PrefabLimit
+    public class PrefabLimit
     {
         public Prefab prefab;
         public int count;

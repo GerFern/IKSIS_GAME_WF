@@ -1,8 +1,6 @@
 ﻿using GameCore.Interfaces;
 using Gtk;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using UI = Gtk.Builder.ObjectAttribute;
 
 namespace gtk_test.Widgets
@@ -30,14 +28,8 @@ namespace gtk_test.Widgets
             _playerName.Text = playerState.Name;
             if (!readOnlyState)
             {
-
                 _color.Sensitive = true;
                 _ready.Sensitive = true;
-                //_color.AddEvents((int)Gdk.EventMask.AllEventsMask);
-                //_ready.AddEvents((int)Gdk.EventMask.AllEventsMask);
-
-                //_color.AddEvents((int)(Gdk.EventMask.ExposureMask | Gdk.EventMask.EnterNotifyMask | Gdk.EventMask.ButtonPressMask | Gdk.EventMask.ButtonReleaseMask | Gdk.EventMask.FocusChangeMask));
-                //_ready.AddEvents((int)(Gdk.EventMask.ExposureMask | Gdk.EventMask.EnterNotifyMask | Gdk.EventMask.ButtonPressMask | Gdk.EventMask.ButtonReleaseMask | Gdk.EventMask.FocusChangeMask));
                 _color.ColorSet += new EventHandler((o, e) =>
                 {
                     if (!toogleState)
@@ -116,25 +108,6 @@ namespace gtk_test.Widgets
 
         public event Action<bool> ToggleChanged;
         public event Action<Gdk.Color> ColorChanged;
-
-        //public PlayerState PlayerState
-        //{
-        //    get => playerState;
-        //    set
-        //    {
-        //        if (playerState != null)
-        //        {
-        //            playerState.ColorChanged -= PlayerState_ColorChanged;
-        //            playerState.ReadyChanged -= PlayerState_ReadyChanged;
-        //        }
-        //        playerState = value;
-        //        PlayerName = playerState.Name;
-        //        Color = playerState.Color.ToGdkColor();
-        //        Ready = playerState.Ready;
-        //        playerState.ColorChanged += PlayerState_ColorChanged;
-        //        playerState.ReadyChanged += PlayerState_ReadyChanged;
-        //    }
-        //}
 
         private void PlayerState_ReadyChanged(object sender, EventArgs e)
         {

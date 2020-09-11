@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace EmptyTest.Proxy
+namespace EmptyTest.Client
 {
     public class ClientInfo<IClient, TClientData>
     {

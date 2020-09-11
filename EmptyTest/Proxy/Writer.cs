@@ -1,6 +1,8 @@
-﻿using System;
+﻿using EmptyTest.BinaryWriterExtensions;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
@@ -35,9 +37,9 @@ namespace EmptyTest.Proxy
         //    //thread.Start();
         //}
 
-        public static void WriteResult(BinaryWriterE writer, int id, object result)
+        public static void WriteResult(this BinaryWriter writer, int id, object result)
         {
-            lock(writer.locked)
+            lock(writer)
             {
                 writer.WriteEnum(MessageType.Result);
                 formatter.Serialize(writer.BaseStream, new IDResult(id, result));
@@ -46,13 +48,18 @@ namespace EmptyTest.Proxy
             }
         }
 
-        public static void WriteAction(BinaryWriterE writer, MethodEventArgs methodEventArgs)
+        public static void WriteAction(this BinaryWriter writer, MethodEventArgs methodEventArgs)
         {
-            lock (writer.locked)
+            lock (writer)
             {
                 writer.WriteEnum(MessageType.Action);
                 formatter.Serialize(writer.BaseStream, methodEventArgs);
             }
+        }
+
+        internal static void WriteResult(Action<int, object> writeResult, int iD, object result)
+        {
+            throw new NotImplementedException();
         }
 
         //public event EventHandler<MethodEventArgs> MethodEvent;

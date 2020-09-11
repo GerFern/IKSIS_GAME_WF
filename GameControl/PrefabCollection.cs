@@ -114,8 +114,7 @@ namespace GameCore
     public class PrefabCollection : Dictionary<int, PrefabLimit>/*, ICollection<Prefab>, ICollection<PrefabLimit>*/
     {
         public PrefabCollection()
-        {
-        }
+        {}
 
         public PrefabCollection(IDictionary<int, PrefabLimit> collection)
         {

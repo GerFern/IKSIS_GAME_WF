@@ -59,9 +59,9 @@
                 <child>
                   <object class="GtkButton" id="_mvButton1">
                     <property name="label" translatable="yes">Играть</property>
-                    <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="no_show_all">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -98,9 +98,9 @@
                 <child>
                   <object class="GtkButton" id="_mvButton4">
                     <property name="label" translatable="yes">Настройки</property>
-                    <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="no_show_all">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -355,17 +355,71 @@
           </object>
         </child>
         <child>
-          <object class="GtkScale" id="_hScale">
-            <property name="width_request">100</property>
+          <object class="GtkGrid">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="no_show_all">True</property>
-            <property name="adjustment">_heigthCell</property>
-            <property name="fill_level">100</property>
-            <property name="round_digits">0</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkScale" id="_hScale">
+                <property name="width_request">100</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="no_show_all">True</property>
+                <property name="adjustment">_heigthCell</property>
+                <property name="fill_level">100</property>
+                <property name="round_digits">0</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="margin_top">5</property>
+                <property name="label" translatable="yes">Высота</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkGrid">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkColorButton">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="margin_top">5</property>
+                <property name="label" translatable="yes">Фон</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>

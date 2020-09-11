@@ -15,7 +15,7 @@ namespace gtk_test
 {
     class GameWidgetOver
     {
-        public string message = "Ёё!&;Hello, РщЪъцЦ<>q#@";
+        public string message = string.Empty;
         public DrawingArea DrawingArea { get; }
         public PointD Cursor { get; private set; }
         public PointD Location { get; private set; }
@@ -188,10 +188,10 @@ namespace gtk_test
                 gr.Translate(TranslateX, TranslateY);
                 gr.Antialias = Antialias.Subpixel;
                 gr.Rectangle(new Cairo.Rectangle(0, 0, Game.Columns * 50, Game.Rows * 50));
-                gr.Color = BackgroundColor;
-                gr.Color = new Color(0.4, 0.5, 0.8, 1);
+                gr.SetSourceColor(BackgroundColor);
+                gr.SetSourceColor(new Color(0.4, 0.5, 0.8, 1));
                 gr.Fill();
-                gr.Color = new Color(0, 0, 0, 1);
+                gr.SetSourceColor(new Color(0, 0, 0, 1));
                 gr.LineWidth = 10;
                 //gr.LineJoin = LineJoin.Round;
                 gr.LineCap = LineCap.Round;
@@ -200,7 +200,6 @@ namespace gtk_test
                 //DrawCell(gr, 1, 1, 50, 50, 10, new Color(0,0,1, 0.75));
                 //DrawCell(gr,0, 2, 50, 50, 10, new Color(1, 0, 0, 0.75));
                 //DrawCell(gr, 1, 2, 50, 50, 10, new Color(0, 0, 1, 0.75));
-
                 DrawGrid(gr, 50, 50, Game.Columns, Game.Rows);
                 if (is3D)
                 {
@@ -368,7 +367,7 @@ namespace gtk_test
             //Cairo.Rectangle r = new Cairo.Rectangle(0, 0, 100, 100);
             context.Rectangle(rectangle);
             //context.SetSource(solidPattern);
-            context.Color = new Color(0.75, 0.75, 0.75, 0.8);
+            context.SetSourceColor(new Color(0.75, 0.75, 0.75, 0.8));
             context.Fill();
             //Color white = new Color(0.5, 0.5, 0.5, 1);
             //Color transparent = new Color(0, 0, 0, 0);
@@ -812,15 +811,15 @@ namespace gtk_test
                 context.ClosePath();
             }
             context.Rectangle(rectangleUp);
-            context.Color = color;
+            context.SetSourceColor(color);
             context.Fill();
             if (selected)
             {
                 context.Rectangle(rectangleUp);
-                context.Color = new Color(0.75, 0.75, 0.75, 0.5);
+                context.SetSourceColor(new Color(0.75, 0.75, 0.75, 0.5));
                 context.Fill();
             }
-            context.Color = gray;
+            context.SetSourceColor(gray);
             context.Rectangle(rectangleUp);
             context.Stroke();
             ang ^= Ang.All;
@@ -892,7 +891,7 @@ namespace gtk_test
 
         public static void FillCellPath(Context context, Rectangle rectangle, Rectangle rectangleUp, Color color, Border border, double h)
         {
-            context.Color = color;
+            context.SetSourceColor(color);
             if (border.HasFlag(Border.Rigth))
             {
                 if (border.HasFlag(Border.Down))

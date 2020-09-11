@@ -38,7 +38,7 @@ namespace gtk_test.Windows
             stack.Add(GameWidget);
 
 
-            MainWidget.ButtonPlay += MainWindow_ButtonPlay;
+            //MainWidget.ButtonPlay += MainWindow_ButtonPlay;
             MainWidget.ButtonConnect += MainWindow_ButtonConnect;
             MainWidget.ButtonCreate += MainWindow_ButtonCreate;
             //MainWidget.ButtonSettings += MainWindow_ButtonSettings;
@@ -108,7 +108,17 @@ namespace gtk_test.Windows
 
         private void MainWindow_ButtonCreate(object sender, EventArgs e)
         {
-            new Thread(() => GameServer.Program.Main(new string[] { "192.168.0.49", "7979" })) { Name = "GameServerThread" }.Start();
+            new Thread(() =>
+            {
+                try
+                {
+                    GameServer.Program.Main(new string[] { });
+                }
+                catch(Exception ex)
+                {
+
+                }
+            }) { Name = "GameServerThread" }.Start();
             //System.Diagnostics.ProcessStartInfo processStartInfo = new System.Diagnostics.ProcessStartInfo("GameServer.exe");
             ////processStartInfo.RedirectStandardOutput = true;
             ////processStartInfo.Domain = "aaaaa";
@@ -122,40 +132,40 @@ namespace gtk_test.Windows
             stack.VisibleChild = ConnectWidget;
         }
 
-        private void MainWindow_ButtonPlay(object sender, EventArgs e)
-        {
-            InitOfflineGame();
-            stack.VisibleChild = GameWidget;
-        }
+        //private void MainWindow_ButtonPlay(object sender, EventArgs e)
+        //{
+        //    InitOfflineGame();
+        //    stack.VisibleChild = GameWidget;
+        //}
 
-        private void InitOfflineGame()
-        {
-            Game = new GameCore.Game();
-            Game.Prefabs.Set(GameCore.Interfaces.ServerManager.standartPrefabLimit);
-            //Game.Prefabs.Add(new System.Drawing.Point(0, 0));
-            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-            //                 new System.Drawing.Point(0, 1));
-            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-            //                 new System.Drawing.Point(0, 1),
-            //                 new System.Drawing.Point(1, 0));
-            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-            //                 new System.Drawing.Point(0, 1),
-            //                 new System.Drawing.Point(1, 0),
-            //                 new System.Drawing.Point(1, 1));
-            //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
-            //                 new System.Drawing.Point(0, 1),
-            //                 new System.Drawing.Point(0, 2),
-            //                 new System.Drawing.Point(1, 0));
+        //private void InitOfflineGame()
+        //{
+        //    Game = new GameCore.Game();
+        //    Game.Prefabs.Set(GameCore.Interfaces.ServerManager.standartPrefabLimit);
+        //    //Game.Prefabs.Add(new System.Drawing.Point(0, 0));
+        //    //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+        //    //                 new System.Drawing.Point(0, 1));
+        //    //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+        //    //                 new System.Drawing.Point(0, 1),
+        //    //                 new System.Drawing.Point(1, 0));
+        //    //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+        //    //                 new System.Drawing.Point(0, 1),
+        //    //                 new System.Drawing.Point(1, 0),
+        //    //                 new System.Drawing.Point(1, 1));
+        //    //Game.Prefabs.Add(new System.Drawing.Point(0, 0),
+        //    //                 new System.Drawing.Point(0, 1),
+        //    //                 new System.Drawing.Point(0, 2),
+        //    //                 new System.Drawing.Point(1, 0));
 
-            System.Drawing.Color blue = System.Drawing.Color.FromArgb(64, 128, 255);
-            System.Drawing.Color red = System.Drawing.Color.FromArgb(192, 32, 32);
-            //System.Drawing.Color green = System.Drawing.Color.FromArgb(32, 192, 32);
-            Game.Players.Add(1, blue);
-            Game.Players.Add(2, red);
-            //Game.Players.Add(3, green);
-            Game.CurrentPlayer = 1;
-            Game.Start(15, 15);
-            GameWidget.Game = Game;
-        }
+        //    System.Drawing.Color blue = System.Drawing.Color.FromArgb(64, 128, 255);
+        //    System.Drawing.Color red = System.Drawing.Color.FromArgb(192, 32, 32);
+        //    //System.Drawing.Color green = System.Drawing.Color.FromArgb(32, 192, 32);
+        //    Game.Players.Add(1, blue);
+        //    Game.Players.Add(2, red);
+        //    //Game.Players.Add(3, green);
+        //    Game.CurrentPlayer = 1;
+        //    Game.Start(15, 15);
+        //    GameWidget.Game = Game;
+        //}
     }
 }

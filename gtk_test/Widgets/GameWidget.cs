@@ -59,6 +59,7 @@ namespace gtk_test.Widgets
 
         Dictionary<int, GamePlayerState> playerStates = new Dictionary<int, GamePlayerState>();
         private int _counter;
+        Dictionary<int, PrefabSelectorWidget> widgets = new Dictionary<int, PrefabSelectorWidget>();
 
         private GameCore.Game game;
         public Game Game
@@ -66,33 +67,48 @@ namespace gtk_test.Widgets
             get => game;
             set
             {
-                game = value;
-                GameWidgetOver.Game = value;
-                PrefabSelectorWidget[] widgets = new PrefabSelectorWidget[value.Prefabs.Count];
-                var en = value.Prefabs.GetEnumerator();
-                Cairo.Color back = new Cairo.Color(0.5, 0.5, 0.7, 1);
-                Cairo.Color fore = new Cairo.Color(0.5, 0.5, 0.5, 0.6);
-                foreach (var item in _vBox.Children)
+                foreach (var item in widgets.Values)
                 {
                     item.Destroy();
                 }
-                for (int i = 0; i < widgets.Length; i++)
+                game = value;
+                GameWidgetOver.Game = value;
+                widgets.Clear();
+                var en = value.Prefabs.GetEnumerator();
+                Cairo.Color back = new Cairo.Color(0.5, 0.5, 0.7, 1);
+                Cairo.Color fore = new Cairo.Color(0.5, 0.5, 0.5, 0.6);
+                while(en.MoveNext())
                 {
-                    en.MoveNext();
-                    var w = widgets[i] = new PrefabSelectorWidget();
-                    w.Prefab = en.Current.Value.Prefab;
+                    var p = en.Current;
+                    var w = new PrefabSelectorWidget();
+                    widgets.Add(p.Key, w);
+                    w.Prefab = p.Value.Prefab;
+                    w.Count = p.Value.Count;
                     w.PrefabID = en.Current.Key;
                     w.BackgroundColor = back;
                     w.ForeColor = fore;
                     w.GameWidget = GameWidgetOver;
                 }
-                foreach (var item in widgets)
+                foreach (var item in widgets.Values)
                 {
                     var s = item.Prefab.Size;
-                    item.SetSizeRequest(s.Width * 50 + 30, s.Height * 50 + 30);
+                    item.SetSizeRequest(s.Width * 30 + 30, s.Height * 30 + 30);
                     _vBox.Add(item);
                 }
+
+                value.PrefabCountChanged += Value_PrefabCountChanged;
+
                 _vBox.ShowAll();
+            }
+        }
+
+        private void Value_PrefabCountChanged(object sender, (int player, int prefabID, int count) e)
+        {
+            if(e.player == game.PlayerIndex)
+            {
+                var w = widgets[e.prefabID];
+                w.Count = e.count;
+                w.QueueDraw();
             }
         }
 

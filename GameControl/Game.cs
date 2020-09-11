@@ -1,7 +1,6 @@
 ﻿#define test
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
@@ -16,12 +15,12 @@ namespace GameCore
         public Cell this[Point point]
         {
             get => Cells[point.X, point.Y];
-            set => Cells[point.X, point.Y] = value;
+            private set => Cells[point.X, point.Y] = value;
         }
         public Cell this[int x, int y]
         {
             get => Cells[x, y];
-            set => Cells[x, y] = value;
+            private set => Cells[x, y] = value;
         }
 #else
 
@@ -47,21 +46,15 @@ namespace GameCore
         public Cell[,] Cells { get; private set; }
         public PrefabCollection Prefabs { get; } = new PrefabCollection();
         public PlayerDicrionary Players { get; } = new PlayerDicrionary();
-
         public bool MultiplayerGame { get; private set; }
+        /// <summary>
+        /// Номер игрока
+        /// </summary>
         public int PlayerIndex { get; private set; }
-
         /// <summary>
         /// Текущий игрок с правом хода
         /// </summary>
-        public int CurrentPlayer
-        {
-            get;
-#if !test
-            private
-#endif
-            set;
-        }
+        public int CurrentPlayer { get; set; }
         /// <summary>
         /// Количество игроков
         /// </summary>
@@ -91,15 +84,13 @@ namespace GameCore
             Rows = rows;
             Columns = columns;
             PlayersCount = Players.Count;
-            //Players.InitPrefabs(((Dictionary<int,(int,Prefab)>)Prefabs).ToDictionary(a => a.Key, a => a.Value.Item1));
-            Players.InitPrefabs(Prefabs.ToDictionary(a => a.Key, b => b.Value.Count));
+            Players.InitPrefabs(Prefabs);
             IsStarted = true;
             MultiplayerGame = false;
             PlayerIndex = -1;
             CurrentPlayer = 1;
             Started?.Invoke(this, EventArgs.Empty);
         }
-
         public int GetPlayerCount(int playerIndex)
         {
             int counter = 0;
@@ -110,31 +101,23 @@ namespace GameCore
             }
             return counter;
         }
-
         public void StartMultiplayer(Size gameSize, int playerIndex)
         {
             int columns = gameSize.Width, rows = gameSize.Height;
             Cells = new Cell[columns, rows];
             for (int i = 0; i < columns; i++)
-            {
                 for (int j = 0; j < rows; j++)
-                {
                     Cells[i, j] = new Cell(this, new Point(i, j));
-                }
-            }
             Rows = rows;
             Columns = columns;
             PlayersCount = Players.Count;
-            //Players.InitPrefabs(((Dictionary<int,(int,Prefab)>)Prefabs).ToDictionary(a => a.Key, a => a.Value.Item1));
-            Players.InitPrefabs(Prefabs.ToDictionary(a => a.Key, b => b.Value.Count));
+            Players.InitPrefabs(Prefabs);
             IsStarted = true;
             MultiplayerGame = true;
             PlayerIndex = playerIndex;
             CurrentPlayer = 1;
             Started?.Invoke(this, EventArgs.Empty);
         }
-
-
         public void GiveUpPlayer(int index)
         {
             playersGivingUp.Add(index);
@@ -149,7 +132,6 @@ namespace GameCore
             }
             else if (index == CurrentPlayer) NextPlayer();
         }
-
         /// <summary>
         /// Установить фигуру на поле
         /// </summary>
@@ -169,40 +151,32 @@ namespace GameCore
             {
                 p = Players[player].PrefabCountAllow[prefabID];
                 if (p == 0) return false;
-                //if (p > 0) Players[player].PrefabCountAllow[prefabID] = p - 1;
             }
             if (SetPrefab(Prefabs[prefabID].Prefab.GetRotatedPrefab(rotate), offset, out places, player, validate))
             {
-                if (decrement & p > 0) Players[player].PrefabCountAllow[prefabID] = p - 1;
+                if (decrement & p > 0) Players[player].PrefabLimitNotifier.Change(prefabID, p - 1);
                 return true;
             }
             else return false;
         }
-
         public Game()
         {
             WinnerPlayers = new ReadOnlyCollection<int>(winnerPlayers);
+            Players.PrefabCountChanged +=
+                new EventHandler<(int player, int prefabID, int count)>((o, e) =>
+                { PrefabCountChanged?.Invoke(this, e); });
         }
-        //public Game(PlayerCellBase[] players, PrefabCollection prefabs)
-        //{
-        //    Players.Add(0, new EmptyCell());
-        //    for (int i = 0; i < players.Length; i++) Players.Add(i + 1, players[i]);
-        //    Prefabs = prefabs;
-        //    foreach (KeyValuePair<int, Prefab> item in prefabs) { Prefabs.Add(item.Value, item.Key); }
-        //    //PlayersCount = players.Length;
-        //}
         #endregion // public methods
         #region public event
         public event EventHandler Started;
-        //public event EventHandler Started;
         public event EventHandler<EventArgsPrefab> PrefabPlaced;
         public event EventHandler PlayerChanged;
+        public event EventHandler<(int player, int prefabID, int count)> PrefabCountChanged;
         public event EventHandler GameOver;
         public event EventHandler BackgroungColorChanged;
         public event EventHandler<EventArgsPrefab> AddPrefabInList;
         #endregion
         #endregion // PUBLICMEMBERS
-
         #region PRIVATEMEMBERS
         List<int> playersGivingUp = new List<int>();
         Dictionary<int, List<Point>> allowPointsForPlayer = new Dictionary<int, List<Point>>();
@@ -369,49 +343,18 @@ namespace GameCore
 
         #endregion // private methods
         #endregion // PRIVATEMEMBERS
-
-        //public Game()
-        //{
-        //    Players.Add(0, new EmptyCell(SystemColors.Control, Color.AliceBlue));
-        //    Players.Add(1, new PlayerCell(Color.Blue, Color.DeepSkyBlue, Color.CadetBlue, Color.AliceBlue));
-        //    Players.Add(2, new PlayerCell(Color.Red, Color.IndianRed, Color.DarkRed, Color.AliceBlue));
-        //    Prefabs.Add(new Point(0, 0));
-        //    Prefabs.Add(new Point(0, 0), new Point(0, 1));
-        //    Prefabs.Add(new Point(0, 0), new Point(0, 1), new Point(1, 0));
-        //    Prefabs.Add(new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1));
-        //    Prefabs.Add(new Point(0, 0), new Point(0, 1), new Point(0, 2));
-        //    Prefabs.Add(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 0));
-        //    Prefabs.Add(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 1));
-        //    Prefabs.Add(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3));
-        //    Prefabs.Add(new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 0), new Point(2, 0));
-        //    Prefabs.Add(new Point(0, 0), new Point(0, 2), new Point(2, 0), new Point(2, 2));
-        //    Prefabs.Add(new Point(0, 0), new Point(0, 2), new Point(2, 0), new Point(2, 2), new Point(2, 1));
-        //}
-        //public bool AddPrefab()
-
-        //public class PrefabCollection : Dictionary<int, Prefab>
-        //{
-        //    public void Add(params Point[] points)
-        //    {
-        //        int key = this.Keys.Count > 0 ? this.Keys.Max() + 1 : 0;
-        //        this.Add(key, new Prefab(points));
-        //    }
-        //}
-
         public class PlayerDicrionary : Dictionary<int, Player>
         {
-            internal void InitPrefabs(Dictionary<int, int> prefabsCountAllow)
+            internal void InitPrefabs(PrefabCollection prefabsCollection)
             {
-                foreach (var player in Values)
+                foreach (var item in this)
                 {
-                    player.PrefabCountAllow.Clear();
-                    foreach (var prefab in prefabsCountAllow)
-                    {
-                        player.PrefabCountAllow.Add(prefab.Key, prefab.Value);
-                    }
+                    Dictionary<int, int> prefabs = prefabsCollection.ToDictionary(a => a.Key, a => a.Value.Count);
+                    var p = new PrefabLimitNotifier(prefabs);
+                    item.Value.PrefabLimitNotifier = p;
+                    p.CountChanged += new EventHandler<(int key, int count)>((o, e) => this.PrefabCountChanged?.Invoke(this, (item.Key, e.key, e.count)));
                 }
             }
-
             public void Set(IDictionary<int, Player> values)
             {
                 this.Clear();
@@ -420,18 +363,12 @@ namespace GameCore
                     this.Add(item.Key, item.Value);
                 }
             }
-
-            //public void Add(int key, PlayerCellBase playerCell)
-            //{
-            //    base.Add(key, new Player(playerCell));
-            //}
-
             public void Add(int key, Color playerCell)
             {
                 base.Add(key, new Player(playerCell));
             }
+            public event EventHandler<(int player, int prefabID, int count)> PrefabCountChanged;
         }
-
         public class EventArgsPrefab : EventArgs
         {
             public EventArgsPrefab(int prefabID)
@@ -441,14 +378,10 @@ namespace GameCore
             public EventArgsPrefab(Point[] points) : base()
             {
                 Points = points;
-                //Rectangle = rectangle;
             }
-
             public EventArgsPrefab(Point[] points, int prefabID, Point location , Prefab.Rotate rotate, int playerID) : base()
             {
                 Points = points;
-                //Rectangle = rectangle;
-                //Prefab = prefab;
                 PrefabID = prefabID;
                 Location = location;
                 Rotate = rotate;
@@ -472,23 +405,12 @@ namespace GameCore
             /// </summary>
             public int PrefabID { get; }
             public Point Location { get; }
-
             /// <summary>
             /// Повороты
             /// </summary>
             public Prefab.Rotate Rotate { get; }
             public int PlayerID { get; }
         }
-
-        //public class EventArgsInt : EventArgs
-        //{
-        //    public EventArgsInt(int integer) : base()
-        //    {
-        //        Integer = integer;
-        //    }
-
-        //    public int Integer { get; }
-        //}
     }
 }
 
